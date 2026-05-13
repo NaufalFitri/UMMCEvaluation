@@ -1,5 +1,5 @@
 import React from 'react'
 
 export default function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className="border p-2 rounded w-full" {...props} />
+  return <select className="border border-slate-300 p-2.5 rounded-md w-full bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400" {...props} />
 }

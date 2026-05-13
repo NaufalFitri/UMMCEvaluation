@@ -8,7 +8,7 @@ export default function Slider({ value, onChange, min = 1, max = 10 }: { value: 
       max={max}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="w-full"
+      className="w-full accent-[#175cc5]"
     />
   )
 }

@@ -2,10 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand-900: #042645;
+  --brand-800: #08325b;
+  --brand-600: #175cc5;
+  --surface: #f3f6fb;
+}
+
 html, body, #__next {
   height: 100%;
 }
 
 body {
-  @apply antialiased bg-gray-50 text-gray-900;
+  @apply antialiased bg-slate-50 text-slate-900;
+}
+
+* {
+  @apply border-slate-200;
 }
