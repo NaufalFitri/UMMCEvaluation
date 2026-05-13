@@ -1,6 +1,7 @@
 import '../styles/globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Inter } from 'next/font/google'
+import AppShell from '../components/AppShell'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -15,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head />
       <body className={inter.className}>
         <ClerkProvider>
-          <div className="min-h-screen">{children}</div>
+          <AppShell>{children}</AppShell>
         </ClerkProvider>
       </body>
     </html>
