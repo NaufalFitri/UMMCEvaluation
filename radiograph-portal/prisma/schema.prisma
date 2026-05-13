@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+enum ExposureRating {
+  UNDER_EXPOSED
+  OPTIMAL
+  OVER_EXPOSED
+}
+
+enum UserRole {
+  ASSESSOR
+  STUDENT
+}
+
+model User {
+  id          String       @id @default(cuid())
+  clerkId     String       @unique
+  email       String       @unique
+  name        String?
+  role        UserRole     @default(STUDENT)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assessments Evaluation[] @relation("AssessorEvaluations")
+
+  @@map("users")
+}
+
+model Student {
+  id         String       @id @default(cuid())
+  studentId  String       @unique
+  name       String
+  email      String       @unique
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  evaluations Evaluation[]
+
+  @@map("students")
+}
+
+model Evaluation {
+  id               String         @id @default(cuid())
+  studentId        String
+  student          Student        @relation(fields: [studentId], references: [id])
+  assessorId       String
+  assessor         User           @relation("AssessorEvaluations", fields: [assessorId], references: [id])
+  positioningScore Int
+  exposureRating   ExposureRating
+  clinicalFeedback String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("evaluations")
+}
