@@ -105,7 +105,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <h3 className="text-base font-semibold mb-4">Patient & Case Information</h3>
-              <div className="space-y-4">
+              <div className="space-y-4 text-sm">
                 <div>
                   <label className="block mb-1 text-sm font-medium">Student</label>
                   <Select {...register('studentId')}>
@@ -116,11 +116,86 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
                   </Select>
                   {errors.studentId?.message ? <p className="text-xs text-red-600 mt-1">{String(errors.studentId.message)}</p> : null}
                 </div>
-                <div className="rounded-lg border p-3 bg-slate-50">
-                  <div className="text-sm text-slate-600">Selected student details will appear here.</div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">Nama pelatih / JXP</label>
+                  <input {...register('namaPelatih')} className="w-full rounded border px-3 py-2" />
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">Tahun / Semester</label>
+                    <div className="flex gap-2">
+                      <input {...register('tahun')} className="rounded border px-3 py-2 w-1/2" placeholder="Tahun" />
+                      <input {...register('semester')} className="rounded border px-3 py-2 w-1/2" placeholder="Semester" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">Kumpulan / Bilik X-ray</label>
+                    <div className="flex gap-2">
+                      <input {...register('kumpulan')} className="rounded border px-3 py-2 w-1/2" placeholder="Kumpulan" />
+                      <input {...register('bilik')} className="rounded border px-3 py-2 w-1/2" placeholder="Bilik X-ray/Wad" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">Pemeriksaan dinilai</label>
+                  <input {...register('pemeriksaanDinilai')} className="w-full rounded border px-3 py-2" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">Kekerapan penilaian kawasan yang sama</label>
+                    <Select {...register('kekerapanPenilaian')}>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">Nombor pendaftaran</label>
+                    <input {...register('nomborPendaftaran')} className="w-full rounded border px-3 py-2" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">Kawasan pemeriksaan</label>
+                  <input {...register('kawasanPemeriksaan')} className="w-full rounded border px-3 py-2" />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">Indikasi klinikal</label>
+                  <input {...register('indikasiKlinikal')} className="w-full rounded border px-3 py-2" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">Umur</label>
+                    <input {...register('umur')} className="w-full rounded border px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">Jantina</label>
+                    <Select {...register('jantina')}>
+                      <option value="">Select</option>
+                      <option value="Lelaki">Lelaki</option>
+                      <option value="Wanita">Wanita</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">Jenis pesakit</label>
+                    <div className="space-y-1">
+                      <label className="flex items-center gap-2"><input type="checkbox" {...register('jenisPesakit.berjalan')} className="accent-[#175cc5]" /> Berjalan</label>
+                      <label className="flex items-center gap-2"><input type="checkbox" {...register('jenisPesakit.kerusiRoda')} className="accent-[#175cc5]" /> Berkerusi roda</label>
+                      <label className="flex items-center gap-2"><input type="checkbox" {...register('jenisPesakit.troliKatil')} className="accent-[#175cc5]" /> Troli/Katil</label>
+                      <label className="flex items-center gap-2"><input type="checkbox" {...register('jenisPesakit.geriatik')} className="accent-[#175cc5]" /> Geriatik</label>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
+
             <div>
               <h3 className="text-base font-semibold mb-4">Pre-Procedure Checklist</h3>
               <div className="space-y-2 text-sm">
@@ -131,7 +206,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
                   'Safety briefing completed',
                 ].map((item) => (
                   <label key={item} className="flex items-center gap-3 p-2 rounded hover:bg-slate-50 border border-transparent hover:border-slate-200">
-                    <input type="checkbox" className="accent-[#175cc5]" />
+                    <input type="checkbox" className="accent-[#175cc5]" {...register(`checklist.${item}` as any)} />
                     <span>{item}</span>
                   </label>
                 ))}
