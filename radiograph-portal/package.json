@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && next build",
-    "start": "next start",
-    "postinstall": "npx prisma generate || true"
+    "start": "next start"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.0.0",
