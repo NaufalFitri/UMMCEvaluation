@@ -1,5 +1,4 @@
 import React from 'react'
-import Badge from './ui/Badge'
 import Link from 'next/link'
 import { formatDateISO } from '../lib/utils'
 
@@ -12,7 +11,9 @@ export default function EvaluationCard({ evaluation }: { evaluation: any }) {
           <div className="font-medium">{evaluation.student.name} — {evaluation.student.studentId}</div>
         </div>
         <div className="space-x-2">
-          <Badge rating={evaluation.exposureRating} />
+          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            {evaluation.status}
+          </span>
           <Link href={`/evaluations/${evaluation.id}`} className="text-blue-600 underline">View</Link>
         </div>
       </div>

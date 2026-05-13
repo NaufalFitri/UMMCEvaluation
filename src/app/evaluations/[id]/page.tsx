@@ -13,10 +13,13 @@ export default async function EvaluationDetailPage({ params }: { params: { id: s
       <p>Date: {formatDateISO(evaluation.createdAt)}</p>
       <p>Student: {evaluation.student.name} ({evaluation.student.studentId})</p>
       <p>Assessor: {evaluation.assessor.name}</p>
-      <p>Positioning Score: {evaluation.positioningScore}</p>
-      <p>Exposure Rating: {evaluation.exposureRating}</p>
-      <p className="mt-4">Feedback:</p>
-      <p className="whitespace-pre-wrap">{evaluation.clinicalFeedback}</p>
+      <p>Status: {evaluation.status}</p>
+      <p>Current Section: {evaluation.currentSection}</p>
+      <p>Sections Completed: {evaluation.completedSections.length}</p>
+      <p className="mt-4">Pre-Procedure Data:</p>
+      <pre className="whitespace-pre-wrap text-sm bg-slate-50 p-4 rounded-md">
+        {JSON.stringify(evaluation.preProcedureData, null, 2)}
+      </pre>
     </div>
   )
 }

@@ -8,9 +8,12 @@ export default async function DashboardPage() {
 
   const total = evaluations.length
   const uniqueStudents = new Set(evaluations.map((e) => e.studentId)).size
-  const avgScore =
-    total === 0 ? 0 : evaluations.reduce((s, e) => s + e.positioningScore, 0) / total
-  const optimalCount = evaluations.filter((e) => e.exposureRating === 'OPTIMAL').length
+  const completedCount = evaluations.filter((e) => e.status === 'completed').length
+  const inProgressCount = evaluations.filter((e) => e.status === 'in-progress').length
+  const averageSections =
+    total === 0
+      ? 0
+      : evaluations.reduce((sum, e) => sum + e.completedSections.length, 0) / total
 
   return (
     <div className="space-y-6">
@@ -32,12 +35,16 @@ export default async function DashboardPage() {
           <div className="text-3xl font-semibold mt-2">{uniqueStudents}</div>
         </div>
         <div className="p-4 bg-white rounded-xl border shadow-sm">
-          <div className="text-sm text-gray-500">Average Positioning Score</div>
-          <div className="text-3xl font-semibold mt-2">{avgScore.toFixed(1)}</div>
+          <div className="text-sm text-gray-500">Completed Evaluations</div>
+          <div className="text-3xl font-semibold mt-2">{completedCount}</div>
         </div>
         <div className="p-4 bg-white rounded-xl border shadow-sm">
-          <div className="text-sm text-gray-500">Optimal Exposures</div>
-          <div className="text-3xl font-semibold mt-2">{optimalCount}</div>
+          <div className="text-sm text-gray-500">In Progress</div>
+          <div className="text-3xl font-semibold mt-2">{inProgressCount}</div>
+        </div>
+        <div className="p-4 bg-white rounded-xl border shadow-sm">
+          <div className="text-sm text-gray-500">Avg. Sections Completed</div>
+          <div className="text-3xl font-semibold mt-2">{averageSections.toFixed(1)}</div>
         </div>
       </section>
 
@@ -55,8 +62,9 @@ export default async function DashboardPage() {
                   <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Date</th>
                   <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Student ID</th>
                   <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Student Name</th>
-                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Positioning Score</th>
-                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Exposure Rating</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Current Section</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Sections Done</th>
                   <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Actions</th>
                 </tr>
               </thead>
@@ -67,17 +75,12 @@ export default async function DashboardPage() {
                     <td className="p-3">{e.student.studentId}</td>
                     <td className="p-3">{e.student.name}</td>
                     <td className="p-3">
-                      <span className={
-                        e.positioningScore <= 4
-                          ? 'inline-flex rounded-full bg-red-50 text-red-700 px-2.5 py-1 font-semibold'
-                          : e.positioningScore <= 7
-                            ? 'inline-flex rounded-full bg-amber-50 text-amber-700 px-2.5 py-1 font-semibold'
-                            : 'inline-flex rounded-full bg-green-50 text-green-700 px-2.5 py-1 font-semibold'
-                      }>
-                        {e.positioningScore}
+                      <span className={e.status === 'completed' ? 'inline-flex rounded-full bg-green-50 text-green-700 px-2.5 py-1 font-semibold' : 'inline-flex rounded-full bg-amber-50 text-amber-700 px-2.5 py-1 font-semibold'}>
+                        {e.status.replaceAll('-', ' ')}
                       </span>
                     </td>
-                    <td className="p-3"><Badge rating={e.exposureRating} /></td>
+                    <td className="p-3">{e.currentSection.replaceAll('-', ' ')}</td>
+                    <td className="p-3">{e.completedSections.length}</td>
                     <td className="p-3"><Link href={`/evaluations/${e.id}`} className="text-[#175cc5] hover:text-[#114ca5] font-medium">View</Link></td>
                   </tr>
                 ))}

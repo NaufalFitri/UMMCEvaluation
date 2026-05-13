@@ -4,12 +4,13 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '../lib/prisma'
 import { evaluationSchema, type EvaluationInput } from '../lib/validations'
 import { revalidatePath } from 'next/cache'
+import { getOrCreatePortalUser } from '../lib/auth-user'
 
 export async function createEvaluation(formData: EvaluationInput) {
   const { userId } = auth()
   if (!userId) throw new Error('UNAUTHENTICATED')
 
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+  const user = await getOrCreatePortalUser(userId)
   if (!user || user.role !== 'ASSESSOR') throw new Error('UNAUTHORIZED')
 
   const validationResult = evaluationSchema.safeParse(formData)
@@ -17,12 +18,12 @@ export async function createEvaluation(formData: EvaluationInput) {
     return { success: false, errors: validationResult.error.flatten() }
   }
 
-  const { positioningScore, studentId } = validationResult.data
-  if (positioningScore < 1 || positioningScore > 10) {
-    return { success: false, errors: { positioningScore: ['Score must be between 1 and 10'] } }
-  }
+  const parsedData: EvaluationInput = validationResult.data
+  const { studentId } = parsedData
 
-  const student = await prisma.student.findUnique({ where: { id: studentId } })
+  const student = await prisma.student.findUnique({
+    where: { studentId: studentId as string },
+  })
   if (!student) {
     return { success: false, errors: { studentId: ['Student not found'] } }
   }
@@ -31,9 +32,10 @@ export async function createEvaluation(formData: EvaluationInput) {
     data: {
       studentId: student.id,
       assessorId: user.id,
-      positioningScore: validationResult.data.positioningScore,
-      exposureRating: validationResult.data.exposureRating,
-      clinicalFeedback: validationResult.data.clinicalFeedback,
+      preProcedureData: parsedData as any,
+      currentSection: 'pre-procedure-checklist',
+      status: 'in-progress',
+      completedSections: [],
     },
   })
 
@@ -50,7 +52,7 @@ export async function getEvaluations() {
   const { userId } = auth()
   if (!userId) throw new Error('UNAUTHENTICATED')
 
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+  const user = await getOrCreatePortalUser(userId)
   if (!user || user.role !== 'ASSESSOR') throw new Error('UNAUTHORIZED')
 
   const evaluations = await prisma.evaluation.findMany({

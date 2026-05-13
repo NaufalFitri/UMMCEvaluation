@@ -50,9 +50,39 @@ model Evaluation {
   student          Student        @relation(fields: [studentId], references: [id])
   assessorId       String
   assessor         User           @relation("AssessorEvaluations", fields: [assessorId], references: [id])
-  positioningScore Int
-  exposureRating   ExposureRating
-  clinicalFeedback String
+  
+  // Section 1: Pre-Procedure Checklist
+  preProcedureData Json?
+  
+  // Section 2: Image Critique
+  imageCritiqueData Json?
+  
+  // Section 3: Procedure Radiography
+  procedureRadioData Json?
+  
+  // Section 4: Post-Care & General Comments
+  postCareData Json?
+  
+  // Section 5: Penilai Kedua Summary
+  penilaiKeduaData Json?
+  
+  // Section 6: Piawan Imej (Image Panel by Assessor)
+  piawanImejData   Json?
+  
+  // Section 7: Discussion
+  discussionData   Json?
+  
+  // Section 8: Final Result
+  finalResultData  Json?
+  
+  // Section 9: History & Summary
+  historySummaryData Json?
+  
+  // Tracking
+  currentSection   String         @default("pre-procedure-checklist")
+  status           String         @default("in-progress")
+  completedSections String[]      @default([])
+  
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 

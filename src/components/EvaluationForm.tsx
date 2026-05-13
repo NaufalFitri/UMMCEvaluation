@@ -15,6 +15,21 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
   const [successId, setSuccessId] = useState<string | null>(null)
   const [step, setStep] = useState<number>(1)
 
+  const sections = [
+    'Patient & Case Information',
+    'Pre-Procedure Checklist',
+    'Procedure Radiografi',
+    'Image Critique',
+    'Post-Care & General Comments',
+    'Penilai Kedua Summary',
+    'Pawaian Imej Oleh Penilai',
+    'Discussion / Perbincangan',
+    'Final Result',
+    'History / Summary',
+    'Verification',
+    'Save & Finish',
+  ]
+
   const { register, handleSubmit, watch, reset, setValue, formState } = (ReactHookForm as any).useForm({
     resolver: zodResolver(evaluationSchema),
     defaultValues: { positioningScore: 5, exposureRating: 'OPTIMAL' as any },
@@ -40,7 +55,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
   }
 
   function next() {
-    setStep((s) => Math.min(4, s + 1))
+    setStep((s) => Math.min(sections.length, s + 1))
   }
 
   function prev() {
@@ -48,17 +63,32 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
   }
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-6xl">
       <div className="mb-6 rounded-xl border bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-slate-500">
-          {[1, 2, 3, 4].map((item) => (
-            <React.Fragment key={item}>
-              <div className={`h-8 w-8 rounded-full flex items-center justify-center ${step >= item ? 'bg-[#175cc5] text-white' : 'bg-slate-100 text-slate-500'}`}>
-                {item}
-              </div>
-              {item < 4 ? <div className="h-px flex-1 bg-slate-200" /> : null}
-            </React.Fragment>
-          ))}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {sections.map((section, index) => {
+            const item = index + 1
+            const active = step === item
+            const done = step > item
+
+            return (
+              <button
+                key={section}
+                type="button"
+                onClick={() => setStep(item)}
+                className={`min-w-[170px] text-left rounded-lg px-3 py-2 border transition ${
+                  active
+                    ? 'bg-[#175cc5] text-white border-[#175cc5]'
+                    : done
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <div className="text-[11px] uppercase tracking-wide opacity-80">Section {item}</div>
+                <div className="text-xs font-medium truncate">{section}</div>
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -111,6 +141,58 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
         )}
 
         {step === 2 && (
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold">Pre-Procedure Checklist</h3>
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="p-3 text-left">Checklist Item</th>
+                    <th className="p-3 text-center">Y</th>
+                    <th className="p-3 text-center">N</th>
+                    <th className="p-3 text-center">N/A</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    'Patient identity confirmed',
+                    'Procedure explained',
+                    'Exposure settings checked',
+                    'Shielding prepared',
+                  ].map((item) => (
+                    <tr key={item} className="border-t">
+                      <td className="p-3">{item}</td>
+                      <td className="p-3 text-center"><input type="radio" name={item} className="accent-[#175cc5]" /></td>
+                      <td className="p-3 text-center"><input type="radio" name={item} className="accent-[#175cc5]" /></td>
+                      <td className="p-3 text-center"><input type="radio" name={item} className="accent-[#175cc5]" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold">Procedure Radiografi</h3>
+            <div className="rounded-lg border p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              {[
+                'Centering correctly aligned',
+                'Collimation appropriate',
+                'Patient posture maintained',
+                'Artifact minimization applied',
+              ].map((item) => (
+                <label key={item} className="flex items-center gap-2 p-2 rounded border border-slate-200">
+                  <input type="checkbox" className="accent-[#175cc5]" />
+                  <span>{item}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <h3 className="text-base font-semibold mb-4">Image Critique</h3>
@@ -138,7 +220,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 5 && (
           <div>
             <h3 className="text-base font-semibold mb-4">Post-Care & General Comments</h3>
             <div>
@@ -150,11 +232,66 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 6 && (
           <div className="space-y-3">
-            <h3 className="text-base font-semibold">Final Summary</h3>
+            <h3 className="text-base font-semibold">Penilai Kedua Summary</h3>
             <div className="rounded-lg border p-4 bg-slate-50 text-sm text-slate-700">
-              Review your entries and click save to finalize the assessment.
+              Ringkasan penilaian penilai kedua akan dipaparkan di sini.
+            </div>
+          </div>
+        )}
+
+        {step === 7 && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold">Pawaian Imej Oleh Penilai</h3>
+            <div className="rounded-lg border p-4 bg-slate-50 text-sm text-slate-700">
+              Grid perbandingan visual quality and projection criteria.
+            </div>
+          </div>
+        )}
+
+        {step === 8 && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold">Discussion / Perbincangan</h3>
+            <Textarea rows={6} placeholder="Justification, issues, and proposed improvements..." />
+          </div>
+        )}
+
+        {step === 9 && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold">Final Result</h3>
+            <div className="rounded-xl border p-6 bg-green-50 text-green-800 max-w-sm">
+              <div className="text-xs uppercase tracking-wide">Decision</div>
+              <div className="text-3xl font-bold mt-1">PASS</div>
+              <div className="text-sm mt-1">Excellent work. Keep it up.</div>
+            </div>
+          </div>
+        )}
+
+        {step === 10 && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold">History / Summary</h3>
+            <div className="rounded-lg border p-4 bg-slate-50 text-sm text-slate-700">
+              Recent assessment trend and history summary placeholders.
+            </div>
+          </div>
+        )}
+
+        {step === 11 && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold">Verification</h3>
+            <label className="flex items-center gap-3 p-3 border rounded-lg">
+              <input type="checkbox" className="accent-[#175cc5]" />
+              <span>I verify this assessment is complete and accurate.</span>
+            </label>
+          </div>
+        )}
+
+        {step === 12 && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold">Save & Finish</h3>
+            <div className="rounded-lg border p-4 bg-slate-50 text-sm text-slate-700">
+              Final review complete. Click Save & Finish to submit this evaluation record.
             </div>
           </div>
         )}
@@ -162,7 +299,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
         <div className="mt-6 flex justify-between">
           <div>{step > 1 ? <button type="button" onClick={prev} className="px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50">Back</button> : null}</div>
           <div>
-            {step < 4 ? (
+            {step < sections.length ? (
               <button type="button" onClick={next} className="px-4 py-2 bg-[#175cc5] hover:bg-[#114ca5] text-white rounded-md">Next</button>
             ) : (
               <Button type="submit" disabled={formState.isSubmitting}>
