@@ -12,7 +12,6 @@ export default async function NewEvaluationPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">New Evaluation</h1>
-      {/* @ts-expect-error Server -> Client prop */}
       <EvaluationForm students={students} />
     </div>
   )
