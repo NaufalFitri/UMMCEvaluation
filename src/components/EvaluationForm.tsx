@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import * as ReactHookForm from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { evaluationSchema, type EvaluationInput } from '../lib/validations'
 import { createEvaluation } from '../actions/evaluations'
@@ -14,7 +14,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
 
-  const { register, handleSubmit, watch, reset, formState } = useForm<EvaluationInput>({
+  const { register, handleSubmit, watch, reset, formState } = (ReactHookForm as any).useForm({
     resolver: zodResolver(evaluationSchema),
     defaultValues: { positioningScore: 5, exposureRating: 'OPTIMAL' as any },
   })
@@ -28,7 +28,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
     try {
       const res = await createEvaluation(data as any)
       if (res?.success) {
-        setSuccessId(res.id)
+        setSuccessId(res.id ?? null)
       } else {
         setServerError(JSON.stringify(res.errors || 'Unknown error'))
       }
