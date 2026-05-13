@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client'
+import { Prisma, UserRole } from '@prisma/client'
 import { currentUser } from '@clerk/nextjs/server'
 import { prisma } from './prisma'
 
@@ -22,22 +22,39 @@ export async function getOrCreatePortalUser(clerkUserId: string) {
 
   const byEmail = await prisma.user.findUnique({ where: { email: primaryEmail } })
   if (byEmail) {
-    return prisma.user.update({
-      where: { id: byEmail.id },
-      data: {
-        clerkId: clerkUserId,
-        name: derivedName,
-      },
-    })
+    try {
+      return await prisma.user.update({
+        where: { id: byEmail.id },
+        data: {
+          clerkId: clerkUserId,
+          name: derivedName,
+        },
+      })
+    } catch (e: any) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        // Unique constraint on clerkId — another process likely created it concurrently.
+        const found = await prisma.user.findUnique({ where: { clerkId: clerkUserId } })
+        if (found) return found
+      }
+      throw e
+    }
   }
 
   // Default new portal users as assessor to avoid sign-in dead-end in first-run environments.
-  return prisma.user.create({
-    data: {
-      clerkId: clerkUserId,
-      email: primaryEmail,
-      name: derivedName,
-      role: UserRole.ASSESSOR,
-    },
-  })
+  try {
+    return await prisma.user.create({
+      data: {
+        clerkId: clerkUserId,
+        email: primaryEmail,
+        name: derivedName,
+        role: UserRole.ASSESSOR,
+      },
+    })
+  } catch (e: any) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      const found = await prisma.user.findUnique({ where: { clerkId: clerkUserId } })
+      if (found) return found
+    }
+    throw e
+  }
 }
