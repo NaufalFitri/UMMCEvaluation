@@ -1,7 +1,7 @@
-import '../styles/globals.css'
+import '@/styles/globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Inter } from 'next/font/google'
-import AppShell from '../components/AppShell'
+import AppShell from '@/components/AppShell'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
