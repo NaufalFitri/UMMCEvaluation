@@ -27,8 +27,8 @@ export default function NewEvaluationPage() {
       
       const { id } = await response.json()
 
-      // Redirect to first section
-      router.push(`/evaluations/${id}/pre-procedure-checklist`)
+      // Redirect to the latest evaluation form route
+      router.push(`/evaluations/${id}`)
     } catch (error) {
       console.error('Error creating evaluation:', error)
       alert('Failed to create evaluation')

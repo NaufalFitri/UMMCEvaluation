@@ -118,7 +118,13 @@ function ThreeMarkTable({
   )
 }
 
-export default function EvaluationForm({ students }: { students: Array<any> }) {
+type EvaluationFormProps = {
+  students: Array<any>
+  evaluationId?: string
+  defaultValues?: Record<string, any>
+}
+
+export default function EvaluationForm({ students, evaluationId, defaultValues }: EvaluationFormProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
   const [step, setStep] = useState<number>(1)
@@ -144,6 +150,7 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
       positioningScore: 5,
       exposureRating: 'OPTIMAL',
       patientType: {},
+      ...defaultValues,
     },
   })
 
@@ -155,6 +162,23 @@ export default function EvaluationForm({ students }: { students: Array<any> }) {
     setServerError(null)
     setSuccessId(null)
     try {
+      if (evaluationId) {
+        const response = await fetch(`/api/evaluations/${evaluationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+
+        const result = await response.json()
+        if (!response.ok || !result?.success) {
+          setServerError(JSON.stringify(result?.error || result?.errors || 'Failed to update evaluation'))
+          return
+        }
+
+        setSuccessId(result.id ?? evaluationId)
+        return
+      }
+
       const res = await createEvaluation(data as any)
       if (res?.success) {
         setSuccessId(res.id ?? null)
