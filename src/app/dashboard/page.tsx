@@ -72,8 +72,8 @@ export default async function DashboardPage() {
                 {evaluations.map((e) => (
                   <tr key={e.id} className="border-t">
                     <td className="p-3">{formatDateISO(e.createdAt)}</td>
-                    <td className="p-3">{e.student.studentId}</td>
-                    <td className="p-3">{e.student.name}</td>
+                    <td className="p-3">{e.student?.studentId || '-'}</td>
+                    <td className="p-3">{e.student?.name || 'Not Selected'}</td>
                     <td className="p-3">
                       <span className={e.status === 'completed' ? 'inline-flex rounded-full bg-green-50 text-green-700 px-2.5 py-1 font-semibold' : 'inline-flex rounded-full bg-amber-50 text-amber-700 px-2.5 py-1 font-semibold'}>
                         {e.status.replaceAll('-', ' ')}

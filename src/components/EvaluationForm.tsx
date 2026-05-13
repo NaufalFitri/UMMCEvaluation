@@ -118,6 +118,52 @@ function ThreeMarkTable({
   )
 }
 
+function ProieksiMarkTable({
+  title,
+  rows,
+  register,
+}: {
+  title: string
+  rows: ScoreRow[]
+  register: any
+}) {
+  return (
+    <div className="space-y-3">
+      <SectionTitle title={title} subtitle="Markah 1-4 untuk setiap projeksi (sehingga 3 percubaan)." />
+      <div className="overflow-hidden rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="p-3 text-left">Item</th>
+              <th className="p-3 text-center">Projeksi 1</th>
+              <th className="p-3 text-center">Projeksi 2</th>
+              <th className="p-3 text-center">Projeksi 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key} className="border-t align-top">
+                <td className="p-3 text-xs">{row.label}</td>
+                {['1', '2', '3'].map((proj) => (
+                  <td key={proj} className="p-3">
+                    <Select {...register(`${row.key}.proj${proj}`)} className="w-full text-xs">
+                      <option value="">-</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                    </Select>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 type EvaluationFormProps = {
   students: Array<any>
   evaluationId?: string
@@ -128,6 +174,8 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
   const [serverError, setServerError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
   const [step, setStep] = useState<number>(1)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [isSavingSection, setIsSavingSection] = useState(false)
 
   const sections = [
     'Maklumat Pesakit',
@@ -144,7 +192,7 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
     'Final Result',
   ]
 
-  const { register, handleSubmit, watch, reset, setValue, formState } = (ReactHookForm as any).useForm({
+  const { register, handleSubmit, watch, reset, setValue, getValues, formState } = (ReactHookForm as any).useForm({
     resolver: zodResolver(evaluationSchema),
     defaultValues: {
       positioningScore: 5,
@@ -158,6 +206,63 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
   const positioningScore = watch('positioningScore') || 5
   const errors = formState.errors || {}
 
+  const sectionMapping = {
+    1: { field: 'maklumatPesakit', name: 'Maklumat Pesakit' },
+    2: { field: 'borangPermintaan', name: 'Borang Permintaan' },
+    3: { field: 'bilikDanPeralatan', name: 'Persediaan Bilik & Peralatan' },
+    4: { field: 'jagaanAwal', name: 'Jagaan Awal Pesakit' },
+    5: { field: 'prosedur', name: 'Prosedur Radiografi' },
+    6: { field: 'radiograf', name: 'Penilaian Radiograf Oleh Pelatih' },
+    7: { field: 'selepas', name: 'Jagaan Pesakit Semasa & Selepas' },
+    8: { field: 'ulasanAm', name: 'Ulasan Am' },
+    9: { field: 'penilaiKedua', name: 'Penilai Kedua Summary' },
+    10: { field: 'piawanImej', name: 'Piawan Imej Oleh Penilai' },
+    11: { field: 'discussion', name: 'Discussion' },
+    12: { field: 'finalResult', name: 'Final Result' },
+  }
+
+  async function onSaveSection() {
+    if (!evaluationId) {
+      setServerError('Cannot save section without evaluation ID')
+      return
+    }
+
+    setIsSavingSection(true)
+    setServerError(null)
+    setSaveMessage(null)
+
+    try {
+      const data = getValues()
+      const sectionInfo = sectionMapping[step as keyof typeof sectionMapping]
+      
+      const response = await fetch(`/api/evaluations/${evaluationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data,
+          section: step,
+          isPartialSave: true,
+        }),
+      })
+
+      const result = await response.json()
+      if (!response.ok || !result?.success) {
+        setServerError(JSON.stringify(result?.error || result?.errors || 'Failed to save section'))
+        setIsSavingSection(false)
+        return
+      }
+
+      setSaveMessage(`✓ ${sectionInfo.name} saved successfully`)
+      setIsSavingSection(false)
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch (e: any) {
+      setServerError(e.message || String(e))
+      setIsSavingSection(false)
+    }
+  }
+
   async function onSubmit(data: EvaluationInput) {
     setServerError(null)
     setSuccessId(null)
@@ -166,7 +271,10 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
         const response = await fetch(`/api/evaluations/${evaluationId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            data,
+            isPartialSave: false,
+          }),
         })
 
         const result = await response.json()
@@ -196,6 +304,27 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
 
   function prev() {
     setStep((s) => Math.max(1, s - 1))
+  }
+
+  async function handleDelete() {
+    if (!evaluationId) return
+    
+    const confirmed = window.confirm('Are you sure you want to delete this evaluation? This cannot be undone.')
+    if (!confirmed) return
+
+    try {
+      const response = await fetch(`/api/evaluations/${evaluationId}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete evaluation')
+      
+      // Redirect to dashboard after deletion
+      window.location.href = '/dashboard'
+    } catch (error) {
+      console.error('Error deleting evaluation:', error)
+      setServerError('Failed to delete evaluation')
+    }
   }
 
   const borangPermintaanRows = [
@@ -446,10 +575,10 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
 
         {step === 5 && (
           <div className="space-y-6">
-            <SectionTitle title="4. Prosedur Radiografi" subtitle="Item a hingga n daripada borang asal." />
+            <SectionTitle title="4. Prosedur Radiografi" subtitle="Penilaian untuk setiap projeksi (sehingga 3 percubaan). Markah: 1-4." />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <ThreeMarkTable
+                <ProieksiMarkTable
                   title="Penilaian teknik"
                   rows={prosedurRows.slice(0, 8)}
                   register={register}
@@ -466,7 +595,7 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
                     <input {...register('prosedur.mas')} className="w-full rounded border px-3 py-2" />
                   </div>
                 </div>
-                <ThreeMarkTable
+                <ProieksiMarkTable
                   title="Keselamatan dan pengendalian"
                   rows={prosedurRows.slice(8)}
                   register={register}
@@ -601,9 +730,36 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
           </div>
         )}
 
-        <div className="mt-6 flex justify-between">
-          <div>{step > 1 ? <button type="button" onClick={prev} className="px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50">Back</button> : null}</div>
-          <div>
+        {saveMessage ? (
+          <div className="mt-4 p-3 bg-green-50 text-green-700 border border-green-200 rounded-md text-sm">
+            {saveMessage}
+          </div>
+        ) : null}
+
+        <div className="mt-6 flex justify-between items-center gap-4">
+          <div className="flex gap-2">
+            {step > 1 ? <button type="button" onClick={prev} className="px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50">Back</button> : null}
+            {evaluationId ? (
+              <button 
+                type="button" 
+                onClick={handleDelete}
+                className="px-4 py-2 border border-red-300 rounded-md text-red-700 hover:bg-red-50"
+              >
+                Delete
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            {evaluationId ? (
+              <button 
+                type="button" 
+                onClick={onSaveSection}
+                disabled={isSavingSection || formState.isSubmitting}
+                className="px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {isSavingSection ? 'Saving...' : 'Save Section'}
+              </button>
+            ) : null}
             {step < sections.length ? (
               <button type="button" onClick={next} className="px-4 py-2 bg-[#175cc5] hover:bg-[#114ca5] text-white rounded-md">Next</button>
             ) : (

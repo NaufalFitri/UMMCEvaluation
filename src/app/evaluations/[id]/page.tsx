@@ -14,16 +14,18 @@ export default async function EvaluationDetailPage({ params }: { params: { id: s
   return (
     <div className="p-6 lg:p-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-slate-900">Latest Evaluation</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Evaluation Form</h1>
         <p className="text-sm text-slate-500">
-          Edit and save the latest evaluation form for {evaluation.student.name} ({evaluation.student.studentId}).
+          {evaluation.student 
+            ? `Edit and save the evaluation form for ${evaluation.student.name} (${evaluation.student.studentId}).`
+            : 'Edit and save the evaluation form. Select a student on the first section.'}
         </p>
       </div>
 
       <EvaluationForm
         students={students}
         evaluationId={evaluation.id}
-        defaultValues={(evaluation.preProcedureData as Record<string, any>) || { studentId: evaluation.student.studentId }}
+        defaultValues={(evaluation.preProcedureData as Record<string, any>) || { studentId: evaluation.student?.studentId }}
       />
     </div>
   )

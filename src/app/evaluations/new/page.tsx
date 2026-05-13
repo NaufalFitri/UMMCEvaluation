@@ -4,34 +4,35 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, AlertCircle } from 'lucide-react'
 
 export default function NewEvaluationPage() {
   const router = useRouter()
-  const [studentId, setStudentId] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleStartEvaluation = async () => {
-    if (!studentId) return
-
+  const handleCreateBlank = async () => {
     setIsLoading(true)
+    setError(null)
     try {
-      // Create a new evaluation
-      const response = await fetch('/api/evaluations', {
+      // Create a blank evaluation without selecting a student
+      const response = await fetch('/api/evaluations/blank', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId }),
       })
 
-      if (!response.ok) throw new Error('Failed to create evaluation')
+      if (!response.ok) {
+        const result = await response.json()
+        throw new Error(result.error || 'Failed to create evaluation')
+      }
       
       const { id } = await response.json()
 
-      // Redirect to the latest evaluation form route
+      // Redirect to the form where student is selected
       router.push(`/evaluations/${id}`)
     } catch (error) {
       console.error('Error creating evaluation:', error)
-      alert('Failed to create evaluation')
+      setError(error instanceof Error ? error.message : 'Failed to create evaluation')
       setIsLoading(false)
     }
   }
@@ -63,35 +64,22 @@ export default function NewEvaluationPage() {
         </section>
 
         <Card className="rounded-3xl p-8 shadow-xl shadow-slate-900/5 border-slate-200/80">
-          <h2 className="text-2xl font-semibold text-slate-900">Launch Assessment</h2>
+          <h2 className="text-2xl font-semibold text-slate-900">Create New Evaluation</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Enter the student identifier to create the evaluation and move into the first section.
+            Start a fresh assessment form. You'll select the student on the first form section.
           </p>
 
           <div className="mt-7 space-y-5">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Select Student
-              </label>
-              <input
-                type="text"
-                value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
-                placeholder="Enter Student ID"
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-[#175cc5] focus:ring-4 focus:ring-[#175cc5]/10"
-              />
-            </div>
-
             <div className="rounded-2xl border border-[#cfe0ff] bg-[#eff5ff] p-4 text-sm text-[#0b3a66]">
-              <strong>Note:</strong> You’ll proceed through separate assessment pages, each with its own layout and save controls.
+              <strong>Workflow:</strong> Create blank → Fill in form (select student first) → Save when complete
             </div>
 
             <Button
-              onClick={handleStartEvaluation}
-              disabled={!studentId || isLoading}
+              onClick={handleCreateBlank}
+              disabled={isLoading}
               className="w-full rounded-xl py-3.5 flex items-center justify-center gap-2 shadow-lg shadow-[#175cc5]/25"
             >
-              {isLoading ? 'Creating...' : 'Start Assessment'}
+              {isLoading ? 'Creating...' : 'Create & Start Assessment'}
               {!isLoading && <ArrowRight className="w-4 h-4" />}
             </Button>
 
