@@ -5,7 +5,10 @@ print('FILE:', path)
 xl = pd.ExcelFile(path)
 print('SHEETS:', xl.sheet_names)
 for sheet in xl.sheet_names:
-    df = xl.parse(sheet, nrows=50)
+    df = xl.parse(sheet, header=None)
     print('\n--- Sheet:', sheet, '---')
-    with pd.option_context('display.max_rows', 20, 'display.max_columns', 50):
-        print(df.head(20).to_string(index=False))
+    print('SHAPE:', df.shape)
+    for idx, row in df.iterrows():
+        values = [str(v).strip() for v in row.tolist() if pd.notna(v) and str(v).strip() != '']
+        if values:
+            print(f'ROW {idx + 1}:', ' | '.join(values[:12]))
