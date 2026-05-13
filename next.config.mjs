@@ -8,6 +8,9 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    optimizePackageImports: ['@clerk/nextjs'],
+  },
 }
 
 export default nextConfig
