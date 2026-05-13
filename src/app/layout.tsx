@@ -11,13 +11,19 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+
   return (
     <html lang="en">
       <head />
       <body className={inter.className}>
-        <ClerkProvider>
+        {hasClerkKey ? (
+          <ClerkProvider>
+            <AppShell>{children}</AppShell>
+          </ClerkProvider>
+        ) : (
           <AppShell>{children}</AppShell>
-        </ClerkProvider>
+        )}
       </body>
     </html>
   )

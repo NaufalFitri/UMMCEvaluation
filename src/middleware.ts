@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -6,11 +7,17 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
 ])
 
-export default clerkMiddleware((auth, request) => {
-  if (!isPublicRoute(request)) {
-    auth().protect()
-  }
-})
+const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+
+export default hasClerkKey
+  ? clerkMiddleware((auth, request) => {
+      if (!isPublicRoute(request)) {
+        auth().protect()
+      }
+    })
+  : function middleware() {
+      return NextResponse.next()
+    }
 
 export const config = {
   matcher: [
