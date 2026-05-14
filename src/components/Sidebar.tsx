@@ -1,7 +1,22 @@
 import Link from 'next/link'
 import React from 'react'
+import { auth } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/prisma'
+import { UserRole } from '@prisma/client'
+import LogoutButton from './LogoutButton'
 
-export default function Sidebar() {
+export default async function Sidebar() {
+  const { userId } = auth()
+  let isAdmin = false
+
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { role: true },
+    })
+    isAdmin = user?.role === UserRole.ADMIN
+  }
+
   const items = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/evaluations/new', label: 'New Assessment' },
@@ -29,9 +44,25 @@ export default function Sidebar() {
             {item.label}
           </Link>
         ))}
+
+        {isAdmin && (
+          <>
+            <div className="border-t border-blue-900/60 my-2" />
+            <Link
+              className="flex items-center gap-3 py-2.5 px-3 rounded-md text-blue-100 hover:text-white hover:bg-blue-800/60 transition"
+              href="/admin"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-purple-300" />
+              Admin Panel
+            </Link>
+          </>
+        )}
       </nav>
 
-      <div className="mt-auto p-4 text-xs text-blue-200 border-t border-blue-900/60">All rights reserved</div>
+      <div className="mt-auto p-4 space-y-3 border-t border-blue-900/60">
+        <LogoutButton />
+        <div className="text-xs text-blue-200">All rights reserved</div>
+      </div>
     </aside>
   )
 }

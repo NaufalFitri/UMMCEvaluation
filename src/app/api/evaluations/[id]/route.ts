@@ -19,6 +19,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return Response.json({ error: 'Evaluation not found' }, { status: 404 })
     }
 
+    // Support both new records (assessorId = user.id) and legacy records (assessorId = clerk userId)
+    const isOwner = evaluation.assessorId === user.id || evaluation.assessorId === userId
+    if (!isOwner) {
+      return Response.json({ error: 'Unauthorized - cannot update evaluation' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { data, isPartialSave, section } = body
 
@@ -130,7 +136,9 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return Response.json({ error: 'Evaluation not found' }, { status: 404 })
     }
 
-    if (evaluation.assessorId !== userId) {
+    // Support both new records (assessorId = user.id) and legacy records (assessorId = clerk userId)
+    const isOwner = evaluation.assessorId === user.id || evaluation.assessorId === userId
+    if (!isOwner) {
       return Response.json({ error: 'Unauthorized - cannot delete evaluation' }, { status: 403 })
     }
 

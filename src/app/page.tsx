@@ -1,6 +1,17 @@
 import Link from 'next/link'
+import { auth } from '@clerk/nextjs/server'
+import { UserRole } from '@prisma/client'
+import { getOrCreatePortalUser } from '@/lib/auth-user'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { userId } = auth()
+  let isAdmin = false
+
+  if (userId) {
+    const user = await getOrCreatePortalUser(userId)
+    isAdmin = user.role === UserRole.ADMIN
+  }
+
   return (
     <main className="min-h-screen bg-[#f2f6fd]">
       <section className="relative overflow-hidden bg-gradient-to-b from-[#08325b] via-[#0a3c70] to-[#042645] text-white">
@@ -21,6 +32,11 @@ export default function HomePage() {
               <Link href="/sign-in" className="inline-flex items-center px-5 py-3 rounded-md bg-white text-[#08325b] font-medium hover:bg-blue-50 transition">
                 Sign In
               </Link>
+              {isAdmin ? (
+                <Link href="/admin" className="inline-flex items-center px-5 py-3 rounded-md bg-amber-100 text-amber-900 font-medium hover:bg-amber-200 transition">
+                  Admin Panel
+                </Link>
+              ) : null}
               <Link href="/sign-up" className="inline-flex items-center px-5 py-3 rounded-md border border-blue-300/40 text-white hover:bg-white/10 transition">
                 Create Account
               </Link>

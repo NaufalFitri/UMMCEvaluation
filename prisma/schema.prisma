@@ -15,6 +15,7 @@ enum ExposureRating {
 }
 
 enum UserRole {
+  ADMIN
   ASSESSOR
   STUDENT
 }

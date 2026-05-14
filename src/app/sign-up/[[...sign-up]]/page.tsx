@@ -1,5 +1,8 @@
 import { SignUp } from '@clerk/nextjs'
 import AuthFrame from '../../../components/AuthFrame'
+import dynamic from 'next/dynamic'
+
+const WaitlistForm = dynamic(() => import('./WaitlistForm'), { ssr: false })
 
 export default function SignUpPage() {
   const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
@@ -7,22 +10,29 @@ export default function SignUpPage() {
   return (
     <AuthFrame title="Create Account" subtitle="Set up your assessor account to begin evaluations.">
       {hasClerkKey ? (
-        <SignUp
-          path="/sign-up"
-          routing="path"
-          appearance={{
-            elements: {
-              rootBox: 'w-full',
-              card: 'shadow-none border border-slate-200 rounded-2xl bg-white/95 backdrop-blur',
-              headerTitle: 'hidden',
-              headerSubtitle: 'hidden',
-              socialButtonsBlockButton: 'border-slate-300 hover:bg-slate-50',
-              formButtonPrimary: 'bg-[#175cc5] hover:bg-[#114ca5] text-sm',
-              formFieldInput: 'border-slate-300 focus:border-blue-400 focus:ring-blue-200',
-              footerActionLink: 'text-[#175cc5] hover:text-[#114ca5]',
-            },
-          }}
-        />
+        // If using built-in waitlist flow, show a lightweight local waitlist form
+        // (controlled by NEXT_PUBLIC_CLERK_WAITLIST=true). This stores entries in
+        // data/waitlist.json and allows admin to approve inside the app.
+        process.env.NEXT_PUBLIC_CLERK_WAITLIST === 'true' ? (
+          <WaitlistForm />
+        ) : (
+          <SignUp
+            path="/sign-up"
+            routing="path"
+            appearance={{
+              elements: {
+                rootBox: 'w-full',
+                card: 'shadow-none border border-slate-200 rounded-2xl bg-white/95 backdrop-blur',
+                headerTitle: 'hidden',
+                headerSubtitle: 'hidden',
+                socialButtonsBlockButton: 'border-slate-300 hover:bg-slate-50',
+                formButtonPrimary: 'bg-[#175cc5] hover:bg-[#114ca5] text-sm',
+                formFieldInput: 'border-slate-300 focus:border-blue-400 focus:ring-blue-200',
+                footerActionLink: 'text-[#175cc5] hover:text-[#114ca5]',
+              },
+            }}
+          />
+        )
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="rounded-xl bg-[#eff5ff] border border-[#cfe0ff] p-4 text-sm text-[#0b3a66]">

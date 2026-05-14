@@ -5,13 +5,15 @@ import { prisma } from '../lib/prisma'
 import { evaluationSchema, type EvaluationInput } from '../lib/validations'
 import { revalidatePath } from 'next/cache'
 import { getOrCreatePortalUser } from '../lib/auth-user'
+import { UserRole } from '@prisma/client'
 
 export async function createEvaluation(formData: EvaluationInput) {
   const { userId } = auth()
   if (!userId) throw new Error('UNAUTHENTICATED')
 
   const user = await getOrCreatePortalUser(userId)
-  if (!user || user.role !== 'ASSESSOR') throw new Error('UNAUTHORIZED')
+  const canAssess = user && (user.role === UserRole.ASSESSOR || user.role === UserRole.ADMIN)
+  if (!canAssess) throw new Error('UNAUTHORIZED')
 
   const validationResult = evaluationSchema.safeParse(formData)
   if (!validationResult.success) {
@@ -53,7 +55,8 @@ export async function getEvaluations() {
   if (!userId) throw new Error('UNAUTHENTICATED')
 
   const user = await getOrCreatePortalUser(userId)
-  if (!user || user.role !== 'ASSESSOR') throw new Error('UNAUTHORIZED')
+  const canAccessDashboard = user && (user.role === UserRole.ASSESSOR || user.role === UserRole.ADMIN)
+  if (!canAccessDashboard) throw new Error('UNAUTHORIZED')
 
   const evaluations = await prisma.evaluation.findMany({
     include: { student: true, assessor: true },

@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!userId) redirect('/sign-in')
 
   const user = await getOrCreatePortalUser(userId)
-  if (user.role !== UserRole.ASSESSOR) redirect('/?error=unauthorized')
+  if (!(user.role === UserRole.ASSESSOR || user.role === UserRole.ADMIN)) redirect('/?error=unauthorized')
 
   return <>{children}</>
 }
