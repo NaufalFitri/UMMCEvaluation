@@ -58,7 +58,19 @@ export async function getEvaluations() {
   const canAccessDashboard = user && (user.role === UserRole.ASSESSOR || user.role === UserRole.ADMIN)
   if (!canAccessDashboard) throw new Error('UNAUTHORIZED')
 
+  // Admins see all evaluations; assessors see only their assigned evaluations
+  const whereClause = user.role === UserRole.ADMIN
+    ? {} // No filter - admins see all
+    : {
+        // Assessors see evaluations where they are primary or secondary assessor
+        OR: [
+          { assessorId: user.id },
+          { secondaryAssessorId: user.id },
+        ],
+      }
+
   const evaluations = await prisma.evaluation.findMany({
+    where: whereClause,
     include: { student: true, assessor: true },
     orderBy: { createdAt: 'desc' },
   })

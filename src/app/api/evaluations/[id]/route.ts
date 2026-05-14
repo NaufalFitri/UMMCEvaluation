@@ -82,15 +82,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return Response.json({ success: true, id: updated.id })
     }
 
-    // Support both new records (assessorId = user.id) and legacy records (assessorId = clerk userId)
-    const isOwner = evaluation.assessorId === user.id || evaluation.assessorId === userId
-    if (!isOwner) {
-      return Response.json({ error: 'Unauthorized - cannot update evaluation' }, { status: 403 })
-    }
-
+    // Get editable sections for this user based on their role and assigned sections
     const editableSections = getEditableSectionNumbers(user, evaluation)
     if (editableSections.length === 0) {
       return Response.json({ error: 'Unauthorized - cannot edit evaluation sections' }, { status: 403 })
+    }
+
+    // Support both new records (assessorId = user.id) and legacy records (assessorId = clerk userId)
+    // Ownership check only applies if it's not a section-based edit
+    const isOwner = evaluation.assessorId === user.id || evaluation.assessorId === userId
+    if (!isOwner && user.role !== UserRole.ADMIN && user.id !== evaluation.secondaryAssessorId) {
+      return Response.json({ error: 'Unauthorized - cannot update evaluation' }, { status: 403 })
     }
 
     const { data, isPartialSave, section } = body

@@ -19,7 +19,7 @@ export default function AppShellClient({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f3f6fb]">
+    <div className="flex min-h-screen bg-[#f3f6fb] items-start">
       {sidebar}
       <div className="flex-1">
         <header className="bg-white/90 backdrop-blur border-b border-slate-200 px-6 py-4 flex justify-between items-center">
