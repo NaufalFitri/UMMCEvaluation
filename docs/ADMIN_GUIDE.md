@@ -26,6 +26,14 @@ Create, edit, and delete assessor accounts:
 - **Actions**: Add, Edit, Delete, View All
 - **Pre-Creation**: Assessors can be added before they sign up (will auto-link on first sign-in)
 
+### 5. **Waitlist Approval Flow**
+New sign-ups can be placed on a waitlist so users only join after admin approval:
+- **Waitlist Form**: Enabled on `/sign-up` when `NEXT_PUBLIC_CLERK_WAITLIST=true`
+- **Admin Review**: Pending requests appear in `/admin/waitlist` and on the admin dashboard
+- **Notification**: Admin sidebar shows a badge count for new waitlist requests
+- **Storage**: Local demo flow stores requests in `data/waitlist.json`
+- **Production**: Use Clerk webhooks to capture waitlist events and optionally sync them into your database
+
 ---
 
 ## 🚀 Getting Started
@@ -56,6 +64,7 @@ ID: <user-id>
 
 ### Step 3: Manage Students & Assessors
 - **Dashboard**: Overview of system statistics
+- **Waitlist**: Review pending sign-up requests at `/admin/waitlist`
 - **Manage Students**: `/admin/students`
   - Add students for evaluation
   - Edit student information
@@ -79,6 +88,33 @@ ID: <user-id>
 - Only ADMIN users can access `/admin` routes
 - Only ADMIN users can access student/assessor management APIs
 - All other routes require authentication but are accessible to authenticated users
+
+---
+
+## 📝 Waitlist Setup
+
+### Environment Variables
+Add these to `.env.local` if you want the waitlist flow enabled:
+
+```bash
+NEXT_PUBLIC_CLERK_WAITLIST=true
+CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret
+```
+
+### Recommended Clerk Webhooks
+Configure Clerk to send webhook events to:
+
+```bash
+/api/webhooks/clerk
+```
+
+This lets you sync new waitlist approvals or user creation events into the app.
+
+### Local Demo Flow
+- Users submit the waitlist form on `/sign-up`
+- Entries are stored in `data/waitlist.json`
+- Admins review pending entries in `/admin/waitlist`
+- Use the email link or Clerk dashboard to approve them
 
 ---
 
@@ -212,6 +248,11 @@ npx prisma migrate dev
 ### Can't access Admin Panel?
 - Verify user has ADMIN role: `npm run setup-admin -- --email=your@email.com`
 - Clear browser cache and sign out/sign in
+
+### Waitlist not showing?
+- Ensure `NEXT_PUBLIC_CLERK_WAITLIST=true` is set
+- Check that `data/waitlist.json` exists after submitting the waitlist form
+- Open `/admin/waitlist` and confirm you are signed in as ADMIN
 
 ### Student/Assessor not saving?
 - Check email is unique

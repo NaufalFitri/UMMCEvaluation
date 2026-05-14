@@ -5,6 +5,21 @@ import { UserRole } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import LogoutButton from '@/components/LogoutButton'
 import { getOrCreatePortalUser } from '@/lib/auth-user'
+import fs from 'fs'
+import path from 'path'
+
+const WAITLIST_FILE = path.join(process.cwd(), 'data', 'waitlist.json')
+
+function getWaitlistCount() {
+  if (!fs.existsSync(WAITLIST_FILE)) return 0
+  try {
+    const raw = fs.readFileSync(WAITLIST_FILE, 'utf8')
+    const list = JSON.parse(raw || '[]')
+    return Array.isArray(list) ? list.length : 0
+  } catch {
+    return 0
+  }
+}
 
 export const metadata = {
   title: 'Admin Panel - Clinical Evaluation System',
@@ -26,9 +41,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const adminLinks = [
     { href: '/admin', label: 'Dashboard' },
+    { href: '/admin/waitlist', label: 'Waitlist' },
     { href: '/admin/students', label: 'Manage Students' },
     { href: '/admin/assessors', label: 'Manage Assessors' },
   ]
+  const waitlistCount = getWaitlistCount()
 
   return (
     <div className="flex min-h-screen bg-[#f3f6fb]">
@@ -48,6 +65,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             >
               <span className="h-1.5 w-1.5 rounded-full bg-blue-300" />
               {link.label}
+              {link.label === 'Waitlist' && waitlistCount > 0 ? (
+                <span className="ml-auto rounded-full bg-amber-400 px-2 py-0.5 text-[11px] font-semibold text-slate-900">
+                  {waitlistCount}
+                </span>
+              ) : null}
             </Link>
           ))}
         </nav>

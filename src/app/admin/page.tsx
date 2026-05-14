@@ -1,5 +1,20 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import fs from 'fs'
+import path from 'path'
+
+const WAITLIST_FILE = path.join(process.cwd(), 'data', 'waitlist.json')
+
+function getWaitlistCount() {
+  if (!fs.existsSync(WAITLIST_FILE)) return 0
+  try {
+    const raw = fs.readFileSync(WAITLIST_FILE, 'utf8')
+    const list = JSON.parse(raw || '[]')
+    return Array.isArray(list) ? list.length : 0
+  } catch {
+    return 0
+  }
+}
 
 export default async function AdminDashboard() {
   const totalStudents = await prisma.student.count()
@@ -10,6 +25,7 @@ export default async function AdminDashboard() {
   const completedEvaluations = await prisma.evaluation.count({
     where: { status: 'completed' },
   })
+  const pendingWaitlist = getWaitlistCount()
 
   return (
     <div className="space-y-6">
@@ -36,6 +52,17 @@ export default async function AdminDashboard() {
         <div className="p-4 bg-white rounded-xl border shadow-sm">
           <div className="text-sm text-gray-500">Completed</div>
           <div className="text-3xl font-semibold mt-2">{completedEvaluations}</div>
+        </div>
+        <div className="p-4 bg-white rounded-xl border shadow-sm md:col-span-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm text-gray-500">Pending Waitlist</div>
+              <div className="text-3xl font-semibold mt-2">{pendingWaitlist}</div>
+            </div>
+            <Link href="/admin/waitlist" className="inline-flex items-center px-4 py-2 bg-amber-100 text-amber-900 rounded-md font-medium hover:bg-amber-200 transition">
+              Review Waitlist
+            </Link>
+          </div>
         </div>
       </section>
 
