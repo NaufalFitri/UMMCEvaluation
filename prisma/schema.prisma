@@ -29,6 +29,7 @@ model User {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   assessments Evaluation[] @relation("AssessorEvaluations")
+  secondaryAssessments Evaluation[] @relation("SecondaryAssessorEvaluations")
 
   @@map("users")
 }
@@ -51,6 +52,8 @@ model Evaluation {
   student          Student?       @relation(fields: [studentId], references: [id])
   assessorId       String
   assessor         User           @relation("AssessorEvaluations", fields: [assessorId], references: [id])
+  secondaryAssessorId String?
+  secondaryAssessor   User?        @relation("SecondaryAssessorEvaluations", fields: [secondaryAssessorId], references: [id])
   
   // Section data (individual storage for each section)
   maklumatPesakitData Json?

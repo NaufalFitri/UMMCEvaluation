@@ -26,7 +26,15 @@ Create, edit, and delete assessor accounts:
 - **Actions**: Add, Edit, Delete, View All
 - **Pre-Creation**: Assessors can be added before they sign up (will auto-link on first sign-in)
 
-### 5. **Waitlist Approval Flow**
+### 5. **Two-Assessor Evaluation Workflow**
+Each evaluation can now be shared by two assessors with different editing rights:
+- **Primary Assessor**: Owns sections 1-8
+- **Secondary Assessor**: Owns sections 9-12
+- **Protection**: Each assessor can only save their own sections; the other assessor’s marks are read-only
+- **Assignment**: Admin assigns the secondary assessor from the evaluation page
+- **Completion**: The evaluation becomes fully completed when both assessors have saved their assigned sections
+
+### 6. **Waitlist Approval Flow**
 New sign-ups can be placed on a waitlist so users only join after admin approval:
 - **Waitlist Form**: Enabled on `/sign-up` when `NEXT_PUBLIC_CLERK_WAITLIST=true`
 - **Admin Review**: Pending requests appear in `/admin/waitlist` and on the admin dashboard
@@ -179,6 +187,12 @@ Displays real-time counts:
 3. Change the role dropdown
 4. Click **"Update Assessor"**
 
+### Assign a Secondary Assessor
+1. Open an evaluation in `/evaluations/[id]`
+2. If you are an admin, choose a secondary assessor in the assignment box at the top
+3. Save the assignment
+4. The primary assessor can only edit sections 1-8 and the secondary assessor can only edit sections 9-12
+
 ### Delete an Assessor
 1. Find the assessor in the table
 2. Click **"Delete"**
@@ -248,6 +262,12 @@ npx prisma migrate dev
 ### Can't access Admin Panel?
 - Verify user has ADMIN role: `npm run setup-admin -- --email=your@email.com`
 - Clear browser cache and sign out/sign in
+
+### Can't edit a section?
+- Check whether you are the primary or secondary assessor for that evaluation
+- Primary assessor edits sections 1-8
+- Secondary assessor edits sections 9-12
+- Ask an admin to assign the secondary assessor if needed
 
 ### Waitlist not showing?
 - Ensure `NEXT_PUBLIC_CLERK_WAITLIST=true` is set

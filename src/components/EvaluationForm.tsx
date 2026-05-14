@@ -168,9 +168,10 @@ type EvaluationFormProps = {
   students: Array<any>
   evaluationId?: string
   defaultValues?: Record<string, any>
+  accessMode?: 'primary' | 'secondary' | 'admin' | 'view'
 }
 
-export default function EvaluationForm({ students, evaluationId, defaultValues }: EvaluationFormProps) {
+export default function EvaluationForm({ students, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
   const [step, setStep] = useState<number>(1)
@@ -205,6 +206,15 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
   const clinicalFeedback = watch('clinicalFeedback') || ''
   const positioningScore = watch('positioningScore') || 5
   const errors = formState.errors || {}
+  const editableSections =
+    accessMode === 'admin'
+      ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      : accessMode === 'primary'
+        ? [1, 2, 3, 4, 5, 6, 7, 8]
+        : accessMode === 'secondary'
+          ? [9, 10, 11, 12]
+          : []
+  const canEditCurrentStep = editableSections.includes(step)
 
   const sectionMapping = {
     1: { field: 'maklumatPesakit', name: 'Maklumat Pesakit' },
@@ -436,6 +446,11 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-6 rounded-xl border shadow-sm">
         {serverError ? <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded mb-4">{serverError}</div> : null}
+        {!canEditCurrentStep ? (
+          <div className="p-3 bg-amber-50 text-amber-800 border border-amber-200 rounded mb-4 text-sm">
+            This section is read-only for your assessor role.
+          </div>
+        ) : null}
         {successId ? (
           <div className="p-3 bg-green-50 text-green-700 border border-green-200 rounded mb-4">
             Evaluation saved. ID: {successId}
@@ -738,10 +753,14 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
 
         <div className="mt-6 flex justify-between items-center gap-4">
           <div className="flex gap-2">
-            {step > 1 ? <button type="button" onClick={prev} className="px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50">Back</button> : null}
-            {evaluationId ? (
-              <button 
-                type="button" 
+            {step > 1 ? (
+              <button type="button" onClick={prev} className="px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50">
+                Back
+              </button>
+            ) : null}
+            {evaluationId && accessMode !== 'view' ? (
+              <button
+                type="button"
                 onClick={handleDelete}
                 className="px-4 py-2 border border-red-300 rounded-md text-red-700 hover:bg-red-50"
               >
@@ -750,9 +769,9 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
             ) : null}
           </div>
           <div className="flex gap-2">
-            {evaluationId ? (
-              <button 
-                type="button" 
+            {evaluationId && canEditCurrentStep ? (
+              <button
+                type="button"
                 onClick={onSaveSection}
                 disabled={isSavingSection || formState.isSubmitting}
                 className="px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50 disabled:opacity-50"
@@ -761,12 +780,14 @@ export default function EvaluationForm({ students, evaluationId, defaultValues }
               </button>
             ) : null}
             {step < sections.length ? (
-              <button type="button" onClick={next} className="px-4 py-2 bg-[#175cc5] hover:bg-[#114ca5] text-white rounded-md">Next</button>
-            ) : (
+              <button type="button" onClick={next} className="px-4 py-2 bg-[#175cc5] hover:bg-[#114ca5] text-white rounded-md">
+                Next
+              </button>
+            ) : evaluationId && canEditCurrentStep ? (
               <Button type="submit" disabled={formState.isSubmitting}>
                 {formState.isSubmitting ? 'Saving...' : 'Save & Finish'}
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </form>
