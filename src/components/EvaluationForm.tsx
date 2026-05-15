@@ -173,7 +173,6 @@ type EvaluationFormProps = {
 }
 
 import { auth } from '@clerk/nextjs/server'
-import { UserRole } from '@prisma/client'
 import { getOrCreatePortalUser } from '@/lib/auth-user'
 
 export default async function EvaluationForm({ students, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
@@ -538,12 +537,19 @@ export default async function EvaluationForm({ students, evaluationId, defaultVa
                 <div>
                   <label className="block mb-1 font-medium">Student</label>
                     {evaluation.student ? (
-                    <input
-                      type="text"
-                      value={evaluation.student.name}
-                      readOnly
-                      className="w-full rounded border px-3 py-2 bg-gray-100"
-                    />
+                    <>
+                      <input
+                        type="text"
+                        value={evaluation.student.name}
+                        readOnly
+                        className="w-full rounded border px-3 py-2 bg-gray-100"
+                      />
+                      <input 
+                        type="hidden" 
+                        value={evaluation.student.id} 
+                        {...register('studentId')} 
+                      />
+                    </>
                     ) : (
                       <Select {...register('studentId')}>
                         <option value="">Select student</option>
