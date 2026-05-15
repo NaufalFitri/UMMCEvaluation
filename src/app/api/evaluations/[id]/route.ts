@@ -4,18 +4,18 @@ import { getOrCreatePortalUser } from '@/lib/auth-user'
 import { UserRole } from '@prisma/client'
 
 const sectionFieldMapping: Record<number, string> = {
-  1: 'maklumatPesakit',
-  2: 'borangPermintaan',
-  3: 'bilikDanPeralatan',
-  4: 'jagaanAwal',
-  5: 'prosedur',
-  6: 'radiograf',
-  7: 'selepas',
-  8: 'ulasanAm',
-  9: 'penilaiKedua',
-  10: 'piawanImej',
-  11: 'discussion',
-  12: 'finalResult',
+  1: 'maklumatPesakitData',
+  2: 'borangPermintaanData',
+  3: 'bilikDanPeralatanData',
+  4: 'jagaanAwalData',
+  5: 'prosedurData',
+  6: 'radiografData',
+  7: 'selepasData',
+  8: 'ulasanAmData',
+  9: 'penilaiKeduaData',
+  10: 'piawanImejData',
+  11: 'discussionData',
+  12: 'finalResultData',
 }
 
 const sectionNames = [

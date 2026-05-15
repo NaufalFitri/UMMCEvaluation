@@ -9,6 +9,7 @@ import Select from './ui/Select'
 import Slider from './ui/Slider'
 import Textarea from './ui/Textarea'
 import Button from './ui/Button'
+import { prisma } from '@/lib/prisma'
 
 type ScoreRow = {
   key: string
@@ -171,12 +172,29 @@ type EvaluationFormProps = {
   accessMode?: 'primary' | 'secondary' | 'admin' | 'view'
 }
 
-export default function EvaluationForm({ students, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
+import { auth } from '@clerk/nextjs/server'
+import { UserRole } from '@prisma/client'
+import { getOrCreatePortalUser } from '@/lib/auth-user'
+
+export default async function EvaluationForm({ students, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
   const [step, setStep] = useState<number>(1)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [isSavingSection, setIsSavingSection] = useState(false)
+
+  const { userId } = auth()
+
+  // Fetch only the specific evaluation and the user context
+  const [evaluation, currentUser] = await Promise.all([
+    prisma.evaluation.findUnique({ 
+      where: { id: evaluationId }, 
+      include: { student: true, assessor: true } 
+    }),
+    userId ? getOrCreatePortalUser(userId) : Promise.resolve(null),
+  ])
+
+  if (!evaluation) return <div className="p-6">Evaluation not found.</div>
 
   const sections = [
     'Maklumat Pesakit',
@@ -217,18 +235,18 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
   const canEditCurrentStep = editableSections.includes(step)
 
   const sectionMapping = {
-    1: { field: 'maklumatPesakit', name: 'Maklumat Pesakit' },
-    2: { field: 'borangPermintaan', name: 'Borang Permintaan' },
-    3: { field: 'bilikDanPeralatan', name: 'Persediaan Bilik & Peralatan' },
-    4: { field: 'jagaanAwal', name: 'Jagaan Awal Pesakit' },
-    5: { field: 'prosedur', name: 'Prosedur Radiografi' },
-    6: { field: 'radiograf', name: 'Penilaian Radiograf Oleh Pelatih' },
-    7: { field: 'selepas', name: 'Jagaan Pesakit Semasa & Selepas' },
-    8: { field: 'ulasanAm', name: 'Ulasan Am' },
-    9: { field: 'penilaiKedua', name: 'Penilai Kedua Summary' },
-    10: { field: 'piawanImej', name: 'Piawan Imej Oleh Penilai' },
-    11: { field: 'discussion', name: 'Discussion' },
-    12: { field: 'finalResult', name: 'Final Result' },
+    1: { field: 'maklumatPesakitData', name: 'Maklumat Pesakit' },
+    2: { field: 'borangPermintaanData', name: 'Borang Permintaan' },
+    3: { field: 'bilikDanPeralatanData', name: 'Persediaan Bilik & Peralatan' },
+    4: { field: 'jagaanAwalData', name: 'Jagaan Awal Pesakit' },
+    5: { field: 'prosedurData', name: 'Prosedur Radiografi' },
+    6: { field: 'radiografData', name: 'Penilaian Radiograf Oleh Pelatih' },
+    7: { field: 'selepasData', name: 'Jagaan Pesakit Semasa & Selepas' },
+    8: { field: 'ulasanAmData', name: 'Ulasan Am' },
+    9: { field: 'penilaiKeduaData', name: 'Penilai Kedua Summary' },
+    10: { field: 'piawanImejData', name: 'Piawan Imej Oleh Penilai' },
+    11: { field: 'discussionData', name: 'Discussion' },
+    12: { field: 'finalResultData', name: 'Final Result' },
   }
 
   async function onSaveSection() {
@@ -519,12 +537,23 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
               <div className="space-y-4 text-sm">
                 <div>
                   <label className="block mb-1 font-medium">Student</label>
-                  <Select {...register('studentId')}>
-                    <option value="">Select student</option>
-                    {students.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name} - {s.studentId}</option>
-                    ))}
-                  </Select>
+                    {evaluation.student ? (
+                    <input
+                      type="text"
+                      value={evaluation.student.name}
+                      readOnly
+                      className="w-full rounded border px-3 py-2 bg-gray-100"
+                    />
+                    ) : (
+                      <Select {...register('studentId')}>
+                        <option value="">Select student</option>
+                        {students.map((s: any) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name} - {s.studentId}
+                          </option>
+                        ))}
+                      </Select>
+                    )}            
                   {errors.studentId?.message ? <p className="text-xs text-red-600 mt-1">{String(errors.studentId.message)}</p> : null}
                 </div>
 
