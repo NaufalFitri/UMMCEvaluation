@@ -172,7 +172,6 @@ type EvaluationFormProps = {
   accessMode?: 'primary' | 'secondary' | 'admin' | 'view'
 }
 
-import { auth } from '@clerk/nextjs/server'
 import { getOrCreatePortalUser } from '@/lib/auth-user'
 
 export default async function EvaluationForm({ students, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
@@ -182,15 +181,12 @@ export default async function EvaluationForm({ students, evaluationId, defaultVa
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [isSavingSection, setIsSavingSection] = useState(false)
 
-  const { userId } = auth()
-
   // Fetch only the specific evaluation and the user context
-  const [evaluation, currentUser] = await Promise.all([
+  const [evaluation] = await Promise.all([
     prisma.evaluation.findUnique({ 
       where: { id: evaluationId }, 
       include: { student: true, assessor: true } 
     }),
-    userId ? getOrCreatePortalUser(userId) : Promise.resolve(null),
   ])
 
   if (!evaluation) return <div className="p-6">Evaluation not found.</div>
