@@ -178,16 +178,15 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify evaluation exists and belongs to this user
+    // Only admin can delete evaluations
+    if (user.role !== UserRole.ADMIN) {
+      return Response.json({ error: 'Unauthorized - only admin can delete evaluations' }, { status: 403 })
+    }
+
+    // Verify evaluation exists
     const evaluation = await prisma.evaluation.findUnique({ where: { id: params.id } })
     if (!evaluation) {
       return Response.json({ error: 'Evaluation not found' }, { status: 404 })
-    }
-
-    // Support both new records (assessorId = user.id) and legacy records (assessorId = clerk userId)
-    const isOwner = evaluation.assessorId === user.id || evaluation.assessorId === userId
-    if (!isOwner) {
-      return Response.json({ error: 'Unauthorized - cannot delete evaluation' }, { status: 403 })
     }
 
     // Delete the evaluation

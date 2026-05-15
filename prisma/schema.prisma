@@ -20,6 +20,12 @@ enum UserRole {
   STUDENT
 }
 
+enum ScheduleStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id          String       @id @default(cuid())
   clerkId     String       @unique
@@ -30,6 +36,8 @@ model User {
   updatedAt   DateTime     @updatedAt
   assessments Evaluation[] @relation("AssessorEvaluations")
   secondaryAssessments Evaluation[] @relation("SecondaryAssessorEvaluations")
+  scheduledAsPrimary   AssessmentSchedule[] @relation("PrimaryAssessorSchedules")
+  scheduledAsSecondary AssessmentSchedule[] @relation("SecondaryAssessorSchedules")
 
   @@map("users")
 }
@@ -42,6 +50,7 @@ model Student {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   evaluations Evaluation[]
+  schedules  AssessmentSchedule[]
 
   @@map("students")
 }
@@ -85,4 +94,26 @@ model Evaluation {
   updatedAt        DateTime       @updatedAt
 
   @@map("evaluations")
+}
+
+model AssessmentSchedule {
+  id                  String         @id @default(cuid())
+  studentId           String
+  student             Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  primaryAssessorId   String
+  primaryAssessor     User           @relation("PrimaryAssessorSchedules", fields: [primaryAssessorId], references: [id], onDelete: Cascade)
+  secondaryAssessorId String?
+  secondaryAssessor   User?          @relation("SecondaryAssessorSchedules", fields: [secondaryAssessorId], references: [id], onDelete: SetNull)
+  scheduledAt         DateTime
+  location            String?
+  notes               String?
+  status              ScheduleStatus @default(SCHEDULED)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@index([studentId])
+  @@index([primaryAssessorId])
+  @@index([secondaryAssessorId])
+  @@index([scheduledAt])
+  @@map("assessment_schedules")
 }

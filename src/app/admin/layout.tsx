@@ -42,6 +42,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const adminLinks = [
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/waitlist', label: 'Waitlist' },
+    { href: '/admin/bulk-upload', label: 'Bulk Upload' },
+    { href: '/admin/schedules', label: 'Schedules' },
     { href: '/admin/students', label: 'Manage Students' },
     { href: '/admin/assessors', label: 'Manage Assessors' },
   ]

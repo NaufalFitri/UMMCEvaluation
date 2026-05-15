@@ -242,7 +242,7 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
     setSaveMessage(null)
 
     try {
-      const data = getValues()
+      const data = withComputedTotals(getValues())
       const sectionInfo = sectionMapping[step as keyof typeof sectionMapping]
       
       const response = await fetch(`/api/evaluations/${evaluationId}`, {
@@ -277,12 +277,14 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
     setServerError(null)
     setSuccessId(null)
     try {
+      const dataWithTotals = withComputedTotals(data)
+
       if (evaluationId) {
         const response = await fetch(`/api/evaluations/${evaluationId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            data,
+            data: dataWithTotals,
             isPartialSave: false,
           }),
         })
@@ -297,7 +299,7 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
         return
       }
 
-      const res = await createEvaluation(data as any)
+      const res = await createEvaluation(dataWithTotals as any)
       if (res?.success) {
         setSuccessId(res.id ?? null)
       } else {
@@ -408,11 +410,63 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
     { key: 'ulasanAm.fahamUlangan', label: 'Pelatih tahu sebab ulangan diperlukan.' },
   ]
 
-  const summaryRows = [
-    'Senarai semak Penilai 1 (Juru X-Ray) /40%',
-    'Piawaian Radiograf /30%',
-    'Perbincangan /30%',
-  ]
+  function parseMark(value: any, max: number) {
+    const numeric = Number(value)
+    if (Number.isNaN(numeric)) return 0
+    return Math.min(Math.max(numeric, 0), max)
+  }
+
+  const checklistPenilaiSatuScore = parseMark(watch('penilaiKedua.checklistPenilaiSatuScore'), 40)
+
+  const piawaianIdentifikasi = parseMark(watch('piawanImej.identifikasi'), 2)
+  const piawaianPenanda = parseMark(watch('piawanImej.penanda'), 2)
+  const piawaianKawasanDedahan = parseMark(watch('piawanImej.kawasanDedahan'), 2)
+  const piawaianProjeksi = parseMark(watch('piawanImej.projeksi'), 8)
+  const piawaianKolimasi = parseMark(watch('piawanImej.kolimasi'), 4)
+  const piawaianKontras = parseMark(watch('piawanImej.kontras'), 8)
+  const piawaianJumlah =
+    piawaianIdentifikasi +
+    piawaianPenanda +
+    piawaianKawasanDedahan +
+    piawaianProjeksi +
+    piawaianKolimasi +
+    piawaianKontras
+
+  const discussionJustifikasi = parseMark(watch('discussion.justifikasiRasional'), 5)
+  const discussionFaktor = parseMark(watch('discussion.pemilihanFaktorDedahan'), 10)
+  const discussionKritikal = parseMark(watch('discussion.penilaianKritikal'), 10)
+  const discussionMasalah = parseMark(watch('discussion.masalahDanAtasi'), 5)
+  const discussionJumlah = discussionJustifikasi + discussionFaktor + discussionKritikal + discussionMasalah
+
+  const overallMark = checklistPenilaiSatuScore + piawaianJumlah + discussionJumlah
+  const finalDecision = overallMark >= 50 ? 'PASS' : 'FAILED'
+
+  function withComputedTotals(rawData: any) {
+    return {
+      ...rawData,
+      penilaiKedua: {
+        ...(rawData?.penilaiKedua || {}),
+        checklistPenilaiSatuScore,
+        piawaianRadiografScore: piawaianJumlah,
+        perbincanganScore: discussionJumlah,
+        jumlahBesar: overallMark,
+      },
+      piawanImej: {
+        ...(rawData?.piawanImej || {}),
+        jumlah: piawaianJumlah,
+      },
+      discussion: {
+        ...(rawData?.discussion || {}),
+        jumlah: discussionJumlah,
+      },
+      finalResult: {
+        ...(rawData?.finalResult || {}),
+        passMark: 50,
+        overallMark,
+        decision: finalDecision,
+      },
+    }
+  }
 
   return (
     <div className="max-w-6xl">
@@ -706,41 +760,190 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
 
         {step === 9 && (
           <div className="space-y-4">
-            <SectionTitle title="SENARAI SEMAK PENILAI KEDUA" subtitle="Ringkasan markah mengikut bahagian borang." />
-            <div className="grid gap-4 md:grid-cols-3">
-              {summaryRows.map((label) => (
-                <div key={label} className="rounded-lg border p-4 bg-slate-50">
-                  <div className="text-sm font-medium">{label}</div>
-                  <div className="mt-3 text-xs text-slate-500">Ringkasan automatik boleh disambung ke kalkulator markah.</div>
-                </div>
-              ))}
+            <SectionTitle title="9. Senarai Semak Penilai Kedua" subtitle="Markah ringkasan mengikut borang penilai kedua." />
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="p-3 text-left">Komponen</th>
+                    <th className="p-3 text-center">Markah</th>
+                    <th className="p-3 text-center">Maksimum</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t">
+                    <td className="p-3">a) Senarai semak Penilai 1 (Juru X-Ray)</td>
+                    <td className="p-3 text-center">
+                      <input
+                        type="number"
+                        min={0}
+                        max={40}
+                        step="0.5"
+                        {...register('penilaiKedua.checklistPenilaiSatuScore')}
+                        className="w-24 rounded border px-2 py-1 text-center"
+                      />
+                    </td>
+                    <td className="p-3 text-center">/40</td>
+                  </tr>
+                  <tr className="border-t bg-slate-50/60">
+                    <td className="p-3">b) Piawaian Radiograf</td>
+                    <td className="p-3 text-center font-medium">{piawaianJumlah.toFixed(1)}</td>
+                    <td className="p-3 text-center">/30</td>
+                  </tr>
+                  <tr className="border-t bg-slate-50/60">
+                    <td className="p-3">c) Perbincangan</td>
+                    <td className="p-3 text-center font-medium">{discussionJumlah.toFixed(1)}</td>
+                    <td className="p-3 text-center">/30</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+            <p className="text-xs text-slate-500">Markah (b) dan (c) dikira automatik daripada Section 10 dan 11.</p>
           </div>
         )}
 
         {step === 10 && (
           <div className="space-y-4">
-            <SectionTitle title="PIAWAN IMEJ OLEH PENILAI" subtitle="Piawaian radiograf dan perbincangan imej." />
-            <div className="rounded-lg border p-4 bg-slate-50 text-sm text-slate-700">
-              Bahagian ini boleh dipanjangkan dengan skala kualiti imej, projeksi, kolimasi, dan penanda seperti dalam borang Excel.
+            <SectionTitle title="10. Piawaian Radiograf" subtitle="Isi markah mengikut pecahan pada borang (jumlah /30)." />
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="p-3 text-left">Item</th>
+                    <th className="p-3 text-center">Markah</th>
+                    <th className="p-3 text-center">Maksimum</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t">
+                    <td className="p-3">a) Identifikasi</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={2} step="0.5" {...register('piawanImej.identifikasi')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/2</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">b) Penanda dan penempatannya</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={2} step="0.5" {...register('piawanImej.penanda')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/2</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">c) Kawasan dedahan atas radiograf</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={2} step="0.5" {...register('piawanImej.kawasanDedahan')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/2</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">d) Projeksi</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={8} step="0.5" {...register('piawanImej.projeksi')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/8</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">e) Kolimasi</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={4} step="0.5" {...register('piawanImej.kolimasi')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/4</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">f) Kontras, densiti dan ketajaman</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={8} step="0.5" {...register('piawanImej.kontras')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/8</td>
+                  </tr>
+                  <tr className="border-t bg-slate-50 font-semibold">
+                    <td className="p-3">Jumlah</td>
+                    <td className="p-3 text-center">{piawaianJumlah.toFixed(1)}</td>
+                    <td className="p-3 text-center">/30</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         )}
 
         {step === 11 && (
-          <div className="space-y-3">
-            <SectionTitle title="Discussion / Perbincangan" />
-            <Textarea rows={8} placeholder="Justification, issues, and proposed improvements..." />
+          <div className="space-y-4">
+            <SectionTitle title="11. Perbincangan" subtitle="Isi markah mengikut pecahan pada borang (jumlah /30)." />
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="p-3 text-left">Item</th>
+                    <th className="p-3 text-center">Markah</th>
+                    <th className="p-3 text-center">Maksimum</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t">
+                    <td className="p-3">a) Justifikasi/rasional pemeriksaan dan projeksi diambil</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={5} step="0.5" {...register('discussion.justifikasiRasional')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/5</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">b) Pemilihan faktor dedahan dan sebab</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={10} step="0.5" {...register('discussion.pemilihanFaktorDedahan')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/10</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">c) Penilaian kritikal radiograf dan patologi</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={10} step="0.5" {...register('discussion.penilaianKritikal')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/10</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">d) Masalah yang dihadapi dan bagaimana diatasi</td>
+                    <td className="p-3 text-center"><input type="number" min={0} max={5} step="0.5" {...register('discussion.masalahDanAtasi')} className="w-24 rounded border px-2 py-1 text-center" /></td>
+                    <td className="p-3 text-center">/5</td>
+                  </tr>
+                  <tr className="border-t bg-slate-50 font-semibold">
+                    <td className="p-3">Jumlah</td>
+                    <td className="p-3 text-center">{discussionJumlah.toFixed(1)}</td>
+                    <td className="p-3 text-center">/30</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <label className="block mb-1 text-sm font-medium">Catatan Perbincangan (optional)</label>
+              <Textarea rows={5} {...register('discussion.catatan')} placeholder="Catatan tambahan oleh penilai kedua..." />
+            </div>
           </div>
         )}
 
         {step === 12 && (
-          <div className="space-y-3">
-            <SectionTitle title="Final Result" />
-            <div className="rounded-xl border p-6 bg-green-50 text-green-800 max-w-sm">
-              <div className="text-xs uppercase tracking-wide">Decision</div>
-              <div className="text-3xl font-bold mt-1">PASS</div>
-              <div className="text-sm mt-1">Excellent work. Keep it up.</div>
+          <div className="space-y-4">
+            <SectionTitle title="12. Final Result" subtitle="Markah lulus ialah 50%. Keputusan dikira automatik." />
+
+            <div className="rounded-lg border overflow-hidden max-w-2xl">
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-t">
+                    <td className="p-3 font-medium">a) Senarai semak Penilai 1</td>
+                    <td className="p-3 text-right">{checklistPenilaiSatuScore.toFixed(1)} / 40</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3 font-medium">b) Piawaian Radiograf</td>
+                    <td className="p-3 text-right">{piawaianJumlah.toFixed(1)} / 30</td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3 font-medium">c) Perbincangan</td>
+                    <td className="p-3 text-right">{discussionJumlah.toFixed(1)} / 30</td>
+                  </tr>
+                  <tr className="border-t bg-slate-50 font-semibold">
+                    <td className="p-3">Jumlah Besar</td>
+                    <td className="p-3 text-right">{overallMark.toFixed(1)} / 100</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className={`rounded-xl border p-6 max-w-sm ${
+              finalDecision === 'PASS'
+                ? 'bg-green-50 text-green-800 border-green-200'
+                : 'bg-red-50 text-red-800 border-red-200'
+            }`}>
+              <div className="text-xs uppercase tracking-wide">Decision (Pass Mark: 50%)</div>
+              <div className="text-3xl font-bold mt-1">{finalDecision}</div>
+              <div className="text-sm mt-1">
+                {finalDecision === 'PASS'
+                  ? `Overall marks ${overallMark.toFixed(1)}% is above or equal to 50%.`
+                  : `Overall marks ${overallMark.toFixed(1)}% is below 50%.`}
+              </div>
             </div>
           </div>
         )}
@@ -758,7 +961,7 @@ export default function EvaluationForm({ students, evaluationId, defaultValues, 
                 Back
               </button>
             ) : null}
-            {evaluationId && accessMode !== 'view' ? (
+            {evaluationId && accessMode === 'admin' ? (
               <button
                 type="button"
                 onClick={handleDelete}
