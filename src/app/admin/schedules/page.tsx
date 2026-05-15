@@ -33,7 +33,18 @@ type Schedule = {
 function toDatetimeLocalValue(value: string | Date) {
   const d = new Date(value)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  
+  // Adjust for timezone to display local time correctly in datetime-local input
+  const timezoneOffset = d.getTimezoneOffset() * 60 * 1000
+  const localDate = new Date(d.getTime() - timezoneOffset)
+  
+  const year = localDate.getUTCFullYear()
+  const month = pad(localDate.getUTCMonth() + 1)
+  const date = pad(localDate.getUTCDate())
+  const hours = pad(localDate.getUTCHours())
+  const minutes = pad(localDate.getUTCMinutes())
+  
+  return `${year}-${month}-${date}T${hours}:${minutes}`
 }
 
 function formatDateTime(value: string | Date) {
@@ -124,11 +135,17 @@ export default function ScheduleManagementPage() {
       const method = editingId ? 'PUT' : 'POST'
       const url = editingId ? `/api/admin/schedules/${editingId}` : '/api/admin/schedules'
 
+      // Parse datetime-local string and adjust for timezone
+      const localDate = new Date(formData.scheduledAt)
+      const timezoneOffset = localDate.getTimezoneOffset() * 60 * 1000
+      const utcDate = new Date(localDate.getTime() + timezoneOffset)
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          scheduledAt: utcDate.toISOString(),
           secondaryAssessorId: formData.secondaryAssessorId || null,
         }),
       })
