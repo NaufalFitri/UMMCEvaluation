@@ -1,10 +1,13 @@
 import { getEvaluations } from '../../actions/evaluations'
+import { getMyScheduledAssessments } from '../../actions/schedules'
 import { formatDateISO } from '../../lib/utils'
 import Link from 'next/link'
 import Badge from '../../components/ui/Badge'
+import StartAssessmentButton from '../../components/StartAssessmentButton'
+import { formatWindowText, isWithinScheduleWindow } from '../../lib/schedule-window'
 
 export default async function DashboardPage() {
-  const evaluations = await getEvaluations()
+  const [evaluations, scheduledAssessments] = await Promise.all([getEvaluations(), getMyScheduledAssessments()])
 
   const total = evaluations.length
   const uniqueStudents = new Set(evaluations.map((e) => e.studentId)).size
@@ -20,9 +23,8 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900">Welcome, Assessor</h2>
-          <p className="text-sm text-slate-500">Track performance and review radiograph evaluations.</p>
+          <p className="text-sm text-slate-500">Track performance and review radiograph evaluations from scheduled sessions.</p>
         </div>
-        <Link href="/evaluations/new" className="inline-flex items-center px-4 py-2 bg-[#175cc5] hover:bg-[#114ca5] text-white rounded-md shadow-sm transition">New Evaluation</Link>
       </div>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -49,10 +51,63 @@ export default async function DashboardPage() {
       </section>
 
       <section>
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">My Scheduled Assessments</h3>
+            <p className="text-xs text-slate-500">{formatWindowText()}</p>
+          </div>
+        </div>
+
+        {scheduledAssessments.length === 0 ? (
+          <div className="rounded-xl border bg-white p-6 text-center text-slate-500 shadow-sm">
+            No scheduled assessments assigned right now.
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+            <table className="w-full table-auto">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Scheduled Time</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Student</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Primary</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Secondary</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Location</th>
+                  <th className="p-3 text-left text-xs uppercase tracking-wide text-slate-500">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scheduledAssessments.map((schedule) => {
+                  const canStart = isWithinScheduleWindow(new Date(schedule.scheduledAt))
+                  return (
+                    <tr key={schedule.id} className="border-t hover:bg-slate-50">
+                      <td className="p-3">{formatDateISO(schedule.scheduledAt)}</td>
+                      <td className="p-3">{schedule.student.name} ({schedule.student.studentId})</td>
+                      <td className="p-3">{schedule.primaryAssessor.name || schedule.primaryAssessor.email}</td>
+                      <td className="p-3">{schedule.secondaryAssessor?.name || schedule.secondaryAssessor?.email || '-'}</td>
+                      <td className="p-3">{schedule.location || '-'}</td>
+                      <td className="p-3">
+                        {canStart ? (
+                          <StartAssessmentButton scheduleId={schedule.id} canStart={true} />
+                        ) : (
+                          <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                            Outside time range
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section>
         {evaluations.length === 0 ? (
           <div className="p-6 bg-white rounded-xl border shadow-sm text-center">
             <p className="mb-4">No evaluations recorded yet.</p>
-            <Link href="/evaluations/new" className="inline-flex items-center px-4 py-2 bg-[#175cc5] text-white rounded-md">Submit First Evaluation →</Link>
+            <p className="text-sm text-slate-500">Evaluations can only be started from assigned schedules.</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">

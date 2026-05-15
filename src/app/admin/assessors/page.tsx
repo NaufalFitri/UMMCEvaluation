@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { formatDateISO } from '@/lib/utils'
+import SectionBulkUpload from '@/components/admin/SectionBulkUpload'
 
 interface Assessor {
   id: string
@@ -126,6 +127,19 @@ export default function AssessorManagementPage() {
 
       {error && <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">{error}</div>}
       {success && <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-md">{success}</div>}
+
+      <SectionBulkUpload
+        target="assessors"
+        title="Bulk Upload Assessors"
+        description="Upload one Excel file for assessors only from this page."
+        sheetName="Assessors"
+        columns={['email', 'name']}
+        sampleRows={[
+          { email: 'assessor1@university.edu', name: 'Dr. Ahmad Ali' },
+          { email: 'assessor2@university.edu', name: 'Prof. Siti Nur' },
+        ]}
+        onUploaded={fetchAssessors}
+      />
 
       {showForm && (
         <div className="p-6 bg-white rounded-xl border shadow-sm">

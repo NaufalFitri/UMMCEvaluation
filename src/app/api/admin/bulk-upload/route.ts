@@ -6,6 +6,18 @@ import { clerkClient } from '@clerk/nextjs/server'
 import * as XLSX from 'xlsx'
 import { getOrCreatePortalUser } from '@/lib/auth-user'
 
+type UploadTarget = 'all' | 'assessors' | 'students' | 'schedules'
+
+function resolveSheet(workbook: XLSX.WorkBook, preferredName: string) {
+  if (workbook.SheetNames.includes(preferredName)) {
+    return workbook.Sheets[preferredName]
+  }
+  if (workbook.SheetNames.length === 1) {
+    return workbook.Sheets[workbook.SheetNames[0]]
+  }
+  return null
+}
+
 export async function POST(request: Request) {
   try {
     const { userId } = auth()
@@ -20,6 +32,11 @@ export async function POST(request: Request) {
 
     const formData = await request.formData()
     const file = formData.get('file') as File
+    const targetRaw = String(formData.get('target') || 'all').toLowerCase()
+    const target: UploadTarget = ['assessors', 'students', 'schedules'].includes(targetRaw)
+      ? (targetRaw as UploadTarget)
+      : 'all'
+
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
@@ -34,8 +51,12 @@ export async function POST(request: Request) {
     }
 
     // Process Assessors sheet
-    if (workbook.SheetNames.includes('Assessors')) {
-      const assessorsSheet = workbook.Sheets['Assessors']
+    if (target === 'all' || target === 'assessors') {
+      const assessorsSheet = resolveSheet(workbook, 'Assessors')
+      if (!assessorsSheet) {
+        results.assessors.failed++
+        results.assessors.errors.push('Assessors sheet not found')
+      } else {
       const assessorsData = XLSX.utils.sheet_to_json(assessorsSheet)
 
       for (const row of assessorsData) {
@@ -85,10 +106,15 @@ export async function POST(request: Request) {
         }
       }
     }
+    }
 
     // Process Students sheet
-    if (workbook.SheetNames.includes('Students')) {
-      const studentsSheet = workbook.Sheets['Students']
+    if (target === 'all' || target === 'students') {
+      const studentsSheet = resolveSheet(workbook, 'Students')
+      if (!studentsSheet) {
+        results.students.failed++
+        results.students.errors.push('Students sheet not found')
+      } else {
       const studentsData = XLSX.utils.sheet_to_json(studentsSheet)
 
       for (const row of studentsData) {
@@ -129,10 +155,15 @@ export async function POST(request: Request) {
         }
       }
     }
+    }
 
     // Process Schedules sheet
-    if (workbook.SheetNames.includes('Schedules')) {
-      const schedulesSheet = workbook.Sheets['Schedules']
+    if (target === 'all' || target === 'schedules') {
+      const schedulesSheet = resolveSheet(workbook, 'Schedules')
+      if (!schedulesSheet) {
+        results.schedules.failed++
+        results.schedules.errors.push('Schedules sheet not found')
+      } else {
       const schedulesData = XLSX.utils.sheet_to_json(schedulesSheet)
 
       for (const row of schedulesData) {
@@ -214,9 +245,11 @@ export async function POST(request: Request) {
         }
       }
     }
+    }
 
     return NextResponse.json({
       success: true,
+      target,
       results,
       message: 'Excel import completed',
     })

@@ -109,35 +109,60 @@ export default function BulkUploadPage() {
       </div>
 
       {/* Instructions Card */}
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Excel File Format</h2>
-        <div className="space-y-4 text-sm text-slate-700">
-          <div>
-            <h3 className="font-medium text-slate-900 mb-2">📋 Assessors Sheet</h3>
-            <p className="text-slate-600">Columns: <code className="bg-white px-2 py-1 rounded border border-slate-200">email</code>, <code className="bg-white px-2 py-1 rounded border border-slate-200">name</code></p>
-            <p className="text-slate-600 mt-1">Example: assessor1@university.edu | Dr. Ahmad Ali</p>
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="bg-gradient-to-r from-[#0f3d72] to-[#175cc5] px-6 py-5 text-white">
+          <h2 className="text-lg font-semibold">Excel File Format</h2>
+          <p className="mt-1 text-sm text-blue-100">Use 3 sheets in one workbook: Assessors, Students, and Schedules.</p>
+        </div>
+
+        <div className="grid gap-4 p-6 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">Assessors</h3>
+            <p className="mt-2 text-xs text-slate-500">Required columns</p>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">email</span>
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">name</span>
+            </div>
+            <p className="mt-3 text-xs text-slate-600">Example: assessor1@university.edu | Dr. Ahmad Ali</p>
           </div>
 
-          <div>
-            <h3 className="font-medium text-slate-900 mb-2">👥 Students Sheet</h3>
-            <p className="text-slate-600">Columns: <code className="bg-white px-2 py-1 rounded border border-slate-200">studentId</code>, <code className="bg-white px-2 py-1 rounded border border-slate-200">name</code>, <code className="bg-white px-2 py-1 rounded border border-slate-200">email</code></p>
-            <p className="text-slate-600 mt-1">Example: STU001 | Muhammad Farhan | farhan@student.edu</p>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">Students</h3>
+            <p className="mt-2 text-xs text-slate-500">Required columns</p>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">studentId</span>
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">name</span>
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">email</span>
+            </div>
+            <p className="mt-3 text-xs text-slate-600">Example: STU001 | Muhammad Farhan | farhan@student.edu</p>
           </div>
 
-          <div>
-            <h3 className="font-medium text-slate-900 mb-2">📅 Schedules Sheet</h3>
-            <p className="text-slate-600">Columns: <code className="bg-white px-2 py-1 rounded border border-slate-200">studentId</code>, <code className="bg-white px-2 py-1 rounded border border-slate-200">primaryAssessorEmail</code>, <code className="bg-white px-2 py-1 rounded border border-slate-200">secondaryAssessorEmail</code> (optional), <code className="bg-white px-2 py-1 rounded border border-slate-200">scheduledAt</code>, <code className="bg-white px-2 py-1 rounded border border-slate-200">location</code>, <code className="bg-white px-2 py-1 rounded border border-slate-200">notes</code></p>
-            <p className="text-slate-600 mt-1">Example: STU001 | assessor1@university.edu | assessor2@university.edu | 2025-05-20 10:00:00 | X-ray Room 2 | Chest assessment</p>
-            <p className="text-slate-600 mt-2"><strong>Date Format:</strong> YYYY-MM-DD HH:mm:ss or Excel date format</p>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">Schedules</h3>
+            <p className="mt-2 text-xs text-slate-500">Required columns</p>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">studentId</span>
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">primaryAssessorEmail</span>
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">scheduledAt</span>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">Optional columns</p>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">secondaryAssessorEmail</span>
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">location</span>
+              <span className="rounded-md border border-slate-200 bg-white px-2 py-1">notes</span>
+            </div>
+            <p className="mt-3 text-xs text-slate-600">Date format: YYYY-MM-DD HH:mm:ss or native Excel date.</p>
           </div>
         </div>
 
-        <button
-          onClick={downloadTemplate}
-          className="mt-6 px-4 py-2 bg-[#175cc5] text-white rounded-md hover:bg-[#114ca5] transition font-medium"
-        >
-          ⬇️ Download Template Excel
-        </button>
+        <div className="border-t border-slate-200 px-6 py-4">
+          <button
+            onClick={downloadTemplate}
+            className="rounded-md bg-[#175cc5] px-4 py-2 font-medium text-white transition hover:bg-[#114ca5]"
+          >
+            Download Full Template Excel
+          </button>
+        </div>
       </div>
 
       {/* Upload Section */}

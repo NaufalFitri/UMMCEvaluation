@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import SectionBulkUpload from '@/components/admin/SectionBulkUpload'
 
 type StudentOption = {
   id: string
@@ -242,6 +243,33 @@ export default function ScheduleManagementPage() {
 
       {error ? <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">{error}</div> : null}
       {success ? <div className="rounded-md border border-green-200 bg-green-50 p-4 text-green-700">{success}</div> : null}
+
+      <SectionBulkUpload
+        target="schedules"
+        title="Bulk Upload Schedules"
+        description="Upload one Excel file for schedules only from this page."
+        sheetName="Schedules"
+        columns={['studentId', 'primaryAssessorEmail', 'secondaryAssessorEmail', 'scheduledAt', 'location', 'notes']}
+        sampleRows={[
+          {
+            studentId: 'STU001',
+            primaryAssessorEmail: 'assessor1@university.edu',
+            secondaryAssessorEmail: 'assessor2@university.edu',
+            scheduledAt: '2026-05-20 10:00:00',
+            location: 'X-ray Room 2',
+            notes: 'Chest radiography assessment',
+          },
+          {
+            studentId: 'STU002',
+            primaryAssessorEmail: 'assessor2@university.edu',
+            secondaryAssessorEmail: '',
+            scheduledAt: '2026-05-21 14:00:00',
+            location: 'X-ray Room 1',
+            notes: 'Spine radiography assessment',
+          },
+        ]}
+        onUploaded={loadAll}
+      />
 
       {showForm ? (
         <div className="rounded-xl border bg-white p-6 shadow-sm">

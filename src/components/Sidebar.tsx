@@ -19,7 +19,6 @@ export default async function Sidebar() {
 
   const items = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/evaluations/new', label: 'New Assessment' },
     { href: '/dashboard', label: 'History' },
     { href: '/', label: 'Reports' },
     { href: '/', label: 'Help' },
