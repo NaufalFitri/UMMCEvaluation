@@ -167,28 +167,18 @@ function ProieksiMarkTable({
 
 type EvaluationFormProps = {
   students: Array<any>
+  currentStudent?: { id: string; name: string; studentId: string } | null
   evaluationId?: string
   defaultValues?: Record<string, any>
   accessMode?: 'primary' | 'secondary' | 'admin' | 'view'
 }
 
-export default async function EvaluationForm({ students, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
+export default function EvaluationForm({ students, currentStudent, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
   const [step, setStep] = useState<number>(1)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [isSavingSection, setIsSavingSection] = useState(false)
-
-  // Fetch only the specific evaluation and the user context
-  const [evaluation, student] = await Promise.all([
-    prisma.evaluation.findUnique({ 
-      where: { id: evaluationId }, 
-      include: { student: true, assessor: true } 
-    }),
-    prisma.student.findMany({ orderBy: { name: 'asc' } }), // Added back safely
-  ])
-
-  if (!evaluation) return <div className="p-6">Evaluation not found.</div>  
 
   const sections = [
     'Maklumat Pesakit',
@@ -531,17 +521,17 @@ export default async function EvaluationForm({ students, evaluationId, defaultVa
               <div className="space-y-4 text-sm">
                 <div>
                   <label className="block mb-1 font-medium">Student</label>
-                    {evaluation.student ? (
+                    {currentStudent ? (
                     <>
                       <input
                         type="text"
-                        value={evaluation.student.name}
+                        value={currentStudent.name}
                         readOnly
                         className="w-full rounded border px-3 py-2 bg-gray-100"
                       />
                       <input 
                         type="hidden" 
-                        value={evaluation.student.id} 
+                        value={currentStudent.id} 
                         {...register('studentId')} 
                       />
                     </>

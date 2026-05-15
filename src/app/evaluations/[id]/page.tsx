@@ -60,6 +60,7 @@ export default async function EvaluationDetailPage({ params }: { params: { id: s
 
       <EvaluationForm
         students={students}
+        currentStudent={evaluation.student}
         evaluationId={evaluation.id}
         defaultValues={(evaluation.preProcedureData as Record<string, any>) || { studentId: evaluation.student?.studentId }}
         accessMode={accessMode}
