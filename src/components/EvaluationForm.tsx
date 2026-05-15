@@ -172,8 +172,6 @@ type EvaluationFormProps = {
   accessMode?: 'primary' | 'secondary' | 'admin' | 'view'
 }
 
-import { getOrCreatePortalUser } from '@/lib/auth-user'
-
 export default async function EvaluationForm({ students, evaluationId, defaultValues, accessMode = 'view' }: EvaluationFormProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
@@ -182,14 +180,15 @@ export default async function EvaluationForm({ students, evaluationId, defaultVa
   const [isSavingSection, setIsSavingSection] = useState(false)
 
   // Fetch only the specific evaluation and the user context
-  const [evaluation] = await Promise.all([
+  const [evaluation, student] = await Promise.all([
     prisma.evaluation.findUnique({ 
       where: { id: evaluationId }, 
       include: { student: true, assessor: true } 
     }),
+    prisma.student.findMany({ orderBy: { name: 'asc' } }), // Added back safely
   ])
 
-  if (!evaluation) return <div className="p-6">Evaluation not found.</div>
+  if (!evaluation) return <div className="p-6">Evaluation not found.</div>  
 
   const sections = [
     'Maklumat Pesakit',
