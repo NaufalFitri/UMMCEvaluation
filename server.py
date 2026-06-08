@@ -64,9 +64,7 @@ async def evaluate_quality(file: UploadFile = File(...)) -> dict:
         exposure_index = estimate_exposure_index(gray_image)
 
         if SIMULATION is None:
-            with SIMULATION_LOCK:
-                if SIMULATION is None:
-                    initialize_pipeline()
+            raise HTTPException(status_code=500, detail="Quality pipeline is not initialized.")
 
         with SIMULATION_LOCK:
             score = run_quality_assessment(
