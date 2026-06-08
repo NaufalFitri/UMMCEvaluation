@@ -29,6 +29,13 @@ def initialize_pipeline() -> None:
         SIMULATION, _ = create_quality_assessment_simulation()
 
 
+def get_simulation():
+    with SIMULATION_LOCK:
+        if SIMULATION is None:
+            initialize_pipeline()
+        return SIMULATION
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     initialize_pipeline()
@@ -63,12 +70,11 @@ async def evaluate_quality(file: UploadFile = File(...)) -> dict:
         rotation_angle = estimate_rotation_angle_degrees(gray_image)
         exposure_index = estimate_exposure_index(gray_image)
 
-        if SIMULATION is None:
-            raise HTTPException(status_code=500, detail="Quality pipeline is not initialized.")
+        simulation = get_simulation()
 
         with SIMULATION_LOCK:
             score = run_quality_assessment(
-                simulation=SIMULATION,
+                simulation=simulation,
                 rotation_angle=rotation_angle,
                 exposure_index=exposure_index,
             )
