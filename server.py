@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Lock
 
@@ -18,7 +19,23 @@ from scripts.medical_image_quality_adjustment import (
     run_quality_assessment,
 )
 
-app = FastAPI(title="CXR Quality Evaluation API")
+SIMULATION = None
+SIMULATION_LOCK = Lock()
+
+
+def initialize_pipeline() -> None:
+    global SIMULATION
+    if SIMULATION is None:
+        SIMULATION, _ = create_quality_assessment_simulation()
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    initialize_pipeline()
+    yield
+
+
+app = FastAPI(title="CXR Quality Evaluation API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,16 +44,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-SIMULATION = None
-SIMULATION_LOCK = Lock()
-
-
-@app.on_event("startup")
-def initialize_pipeline() -> None:
-    global SIMULATION
-    if SIMULATION is None:
-        SIMULATION, _ = create_quality_assessment_simulation()
 
 
 @app.post("/api/evaluate-quality")
@@ -57,7 +64,9 @@ async def evaluate_quality(file: UploadFile = File(...)) -> dict:
         exposure_index = estimate_exposure_index(gray_image)
 
         if SIMULATION is None:
-            initialize_pipeline()
+            with SIMULATION_LOCK:
+                if SIMULATION is None:
+                    initialize_pipeline()
 
         with SIMULATION_LOCK:
             score = run_quality_assessment(
